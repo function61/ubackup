@@ -12,7 +12,7 @@ Stateful containers are gross, but there are use cases where you need them.
 +------------+     +-----------------------------+      +------------------------------+      +--------------+
 |            |     |                             |      |                              |      |              |
 | Once a day +-----> For each container:         +------> Compress all containers'     +------> Upload to S3 |
-|            |     | - if BACKUP_COMMAND defined |      | backups into .tar.gz archive |      |              |
+|            |     | - if BACKUP_COMMAND defined |      | backups into .zip archive    |      |              |
 +------------+     |                             |      |                              |      +--------------+
                    +-----------+-----^-----------+      +------------------------------+
                                |     |
@@ -27,16 +27,22 @@ Stateful containers are gross, but there are use cases where you need them.
                  +-----------------------------------+
 ```
 
-`BACKUP_COMMAND` is an ENV variable.
-
-This simple approach is suprprisingly flexible and its streaming approach is more efficient
-than having to write temporary files.
+`BACKUP_COMMAND` is an ENV variable that contains the command used to take a backup of
+the important state inside the container.
 
 If you need to backup a single file inside a container, use: `BACKUP_COMMAND=cat /yourfile.db`
 
-For PostgreSQL, you could use: `BACKUP_COMMAND=pg_dump -U postgres f61`
+For PostgreSQL, you could use: `BACKUP_COMMAND=pg_dump -U postgres nameOfYourDatabase`
 
-For a directory, you could use `BACKUP_COMMAND=tar -cC /yourdirectory -f - .`
+For a directory, you could use: `BACKUP_COMMAND=tar -cC /yourdirectory -f - .` (`-` means
+`$ tar` will write the archive to `stdout`, `.` just means to process all files in the
+selected directory)
+
+This simple approach is suprprisingly flexible and its streaming approach is more efficient
+than having to write temporary files. µbackup shoves all containers' backups in a single
+compressed .zip file.
+
+You don't have to compress the file inside the container, since that is taken care of for you.
 
 
 How to use
