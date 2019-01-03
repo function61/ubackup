@@ -19,7 +19,7 @@ type Config struct {
 
 func readConfig() (*Config, error) {
 	conf := &Config{}
-	return conf, jsonfile.Read("config.json", conf, false)
+	return conf, jsonfile.Read("config.json", conf, true)
 }
 
 func defaultConfig(pubkeyFilePath string) *Config {
