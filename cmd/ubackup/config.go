@@ -12,7 +12,7 @@ type Config struct {
 	DockerEndpoint      string `json:"docker_endpoint"`
 	Bucket              string `json:"bucket"`
 	BucketRegion        string `json:"bucket_region"`
-	AccessKeyId         string `json:"access_key_string"`
+	AccessKeyId         string `json:"access_key_id"`
 	AccessKeySecret     string `json:"access_key_secret"`
 	EncryptionPublicKey string `json:"encryption_publickey"`
 }
