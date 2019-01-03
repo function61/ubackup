@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func s3ClientUsEast1(akid string, secret string, regionId string) (*s3.S3, error) {
+func s3Client(akid string, secret string, regionId string) (*s3.S3, error) {
 	awsSession, err := session.NewSession()
 	if err != nil {
 		return nil, err

@@ -13,7 +13,7 @@ func uploadBackup(conf Config, filename string, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 	defer logl.Info.Printf("Starting to upload %s", filename)
 
-	s3Client, err := s3ClientUsEast1(conf.AccessKeyId, conf.AccessKeySecret, conf.BucketRegion)
+	s3Client, err := s3Client(conf.AccessKeyId, conf.AccessKeySecret, conf.BucketRegion)
 	if err != nil {
 		return err
 	}
