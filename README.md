@@ -5,7 +5,7 @@ What
 ----
 
 µbackup takes backups from your Docker containers 100 % automatically, properly encrypts
-(more on this on this README) and uploads them to S3.
+(more on this in this README) and uploads them to S3.
 
 Stateful containers are gross, but there are use cases where you need them.
 
@@ -28,8 +28,9 @@ Stateful containers are gross, but there are use cases where you need them.
                  +-----------------------------------+
 ```
 
-`BACKUP_COMMAND` is an ENV variable that contains the command used to take a backup of
-the important state inside the container.
+`BACKUP_COMMAND` is a container's ENV variable (specified during
+`$ docker run -e "BACKUP_COMMAND=..."` for example) that contains the command used to take
+a backup of the important state inside the container.
 
 If you need to backup a single file inside a container, use: `BACKUP_COMMAND=cat /yourfile.db`
 
@@ -55,8 +56,8 @@ that immediately after the backup is complete, µbackup forgets/loses access to 
 encryption key, and only the user holding the private key will be able to decrypt the
 backup. This way the servers nor Amazon can ever access your backups.
 
-If you are serious about security, with this design you could even use a private key in a
-[YubiKey](https://www.yubico.com/) (or some other form of HSM).
+If you are serious about security, with this design you could even store the private key
+in a [YubiKey](https://www.yubico.com/) (or some other form of HSM).
 
 
 How to use
@@ -76,9 +77,12 @@ $ curl --location --fail --output ubackup "https://dl.bintray.com/function61/uba
 $ ./ubackup decryption-key-generate > backups.key
 $ ./ubackup decryption-key-to-encryption-key < backups.key > backups.pub
 
-# create configuration file (specify your S3 bucket details)
+# create configuration file stub (and embed encryption key in the config)
 
 $ ./ubackup print-default-config --pubkey-file backups.pub > config.json
+
+# edit the configuration further (specify your S3 bucket details)
+
 $ vim config.json
 
 $ ./ubackup scheduler install-systemd-service-file
@@ -91,7 +95,7 @@ Run to enable on boot & to start now:
 
 Currently this is offered as a binary that you'll pluck into your server nodes. It would
 not be hard to distribute this as a system-level Docker service (= runs on every node),
-but that is not implemented yet. See #6
+but that is not implemented yet. See [#6](https://github.com/function61/ubackup/issues/6)
 
 
 Restoring from backup

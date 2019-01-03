@@ -67,6 +67,8 @@ func backupAllContainers(ctx context.Context, dockerEndpoint string, encryptionP
 		return "", err
 	}
 
+	// zip was chosen instead of tar, because with tar you need to know the length of the
+	// file beforehand, so it pretty much doesn't support streaming.
 	filename := fmt.Sprintf("backup-%s.zip.aes", time.Now().Format("2006-01-02_1504"))
 	encryptedZipFile, err := os.Create(filename)
 	if err != nil {
