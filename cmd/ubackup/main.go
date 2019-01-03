@@ -11,12 +11,10 @@ import (
 	"os"
 )
 
-var tagline = "Backs up your stateful containers"
-
 func main() {
 	app := &cobra.Command{
 		Use:     os.Args[0],
-		Short:   tagline,
+		Short:   "Backs up your stateful containers",
 		Version: dynversion.Version,
 	}
 
