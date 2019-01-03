@@ -46,20 +46,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8eca8aef6bc6d05cfb486846e2a03005c1b4926c53e8292254e98c6e16ef83a3"
+  digest = "1:36f29efa23f3660ff60ea4eba06dcf28e907ff6af27be477bc46221ee4b0c661"
   name = "github.com/function61/gokit"
   packages = [
+    "cryptoutil",
     "dynversion",
     "envvar",
     "ezhttp",
     "jsonfile",
     "logex",
     "ossignal",
+    "pkencryptedstream",
     "stopper",
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "aed9c6f63461b4ce88f94cc299cc067355cd3128"
+  revision = "c686a734b3ac3945b47dcf7190200d79d39c2389"
 
 [[projects]]
   branch = "master"
@@ -109,12 +111,14 @@
     "github.com/aws/aws-sdk-go/aws/endpoints",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/s3",
+    "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/envvar",
     "github.com/function61/gokit/ezhttp",
     "github.com/function61/gokit/jsonfile",
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
+    "github.com/function61/gokit/pkencryptedstream",
     "github.com/function61/gokit/stopper",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/promswarmconnect/pkg/udocker",

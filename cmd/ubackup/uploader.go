@@ -32,7 +32,7 @@ func uploadBackup(conf Config, filename string, logger *log.Logger) error {
 	if _, err := s3Client.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(conf.Bucket),
 		Key:         aws.String(fmt.Sprintf("%s/%s", hostname, filename)),
-		ContentType: aws.String("application/zip"),
+		ContentType: aws.String("application/octet-stream"),
 		Body:        file,
 	}); err != nil {
 		return err

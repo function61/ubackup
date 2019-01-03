@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/function61/gokit/dynversion"
-	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/spf13/cobra"
 	"log"
@@ -33,21 +32,13 @@ func main() {
 
 	app.AddCommand(schedulerEntry())
 	app.AddCommand(printDefaultConfigEntry())
+	app.AddCommand(decryptEntry())
+	app.AddCommand(decryptionKeyGenerateEntry())
+	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
 	if err := app.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	}
-}
-
-func printDefaultConfigEntry() *cobra.Command {
-	return &cobra.Command{
-		Use:   "print-default-config",
-		Short: "Shows you a default config file format as an example",
-		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			jsonfile.Marshal(os.Stdout, defaultConfig())
-		},
 	}
 }
 
@@ -59,7 +50,11 @@ func backupAllContainersAndUpload(ctx context.Context, logger *log.Logger) error
 		return err
 	}
 
-	filename, err := backupAllContainers(ctx, conf.DockerEndpoint, logex.Prefix("backupAllContainers", logger))
+	filename, err := backupAllContainers(
+		ctx,
+		conf.DockerEndpoint,
+		conf.EncryptionPublicKey,
+		logex.Prefix("backupAllContainers", logger))
 	if err != nil {
 		return err
 	}

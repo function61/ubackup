@@ -2,9 +2,12 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"fmt"
+	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/pkencryptedstream"
 	"io"
 	"log"
 	"os"
@@ -54,7 +57,7 @@ func backupOneTarget(target BackupTarget, zipWriter *zip.Writer, logl *logex.Lev
 	return nil
 }
 
-func backupAllContainers(ctx context.Context, dockerEndpoint string, logger *log.Logger) (string, error) {
+func backupAllContainers(ctx context.Context, dockerEndpoint string, encryptionPublicKey string, logger *log.Logger) (string, error) {
 	logl := logex.Levels(logger)
 
 	logl.Info.Println("Starting discovery")
@@ -64,14 +67,25 @@ func backupAllContainers(ctx context.Context, dockerEndpoint string, logger *log
 		return "", err
 	}
 
-	filename := fmt.Sprintf("backup-%s.zip", time.Now().Format("2006-01-02_1504"))
-	zipFile, err := os.Create(filename)
+	filename := fmt.Sprintf("backup-%s.zip.aes", time.Now().Format("2006-01-02_1504"))
+	encryptedZipFile, err := os.Create(filename)
 	if err != nil {
 		return "", err
 	}
-	defer zipFile.Close()
+	defer encryptedZipFile.Close()
 
-	zipWriter := zip.NewWriter(zipFile)
+	publicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(bytes.NewBufferString(encryptionPublicKey))
+	if err != nil {
+		return "", err
+	}
+
+	encryptedZip, err := pkencryptedstream.Writer(encryptedZipFile, publicKey)
+	if err != nil {
+		return "", err
+	}
+	defer encryptedZip.Close()
+
+	zipWriter := zip.NewWriter(encryptedZip)
 	defer zipWriter.Close()
 
 	for _, target := range targets {
