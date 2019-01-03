@@ -46,7 +46,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:36f29efa23f3660ff60ea4eba06dcf28e907ff6af27be477bc46221ee4b0c661"
+  digest = "1:e40ab68ae08e34370bc71116ce5395aad39c46968dfa970be575b7b042fca008"
   name = "github.com/function61/gokit"
   packages = [
     "cryptoutil",
@@ -61,7 +61,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "c686a734b3ac3945b47dcf7190200d79d39c2389"
+  revision = "7397b370de1295275a4670bce87cc8f5f64e33fa"
 
 [[projects]]
   branch = "master"

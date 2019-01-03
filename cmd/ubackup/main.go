@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/envvar"
+	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/spf13/cobra"
 	"log"
@@ -45,9 +48,18 @@ func main() {
 func backupAllContainersAndUpload(ctx context.Context, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
-	conf, err := readConfig()
-	if err != nil {
-		return err
+	// read config either from ENV var or from a file
+	conf := &Config{}
+	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
+	if err == nil { // FIXME: this swallows invalid base64 syntax error
+		if err := jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true); err != nil {
+			return err
+		}
+	} else {
+		conf, err = readConfig()
+		if err != nil {
+			return err
+		}
 	}
 
 	filename, err := backupAllContainers(

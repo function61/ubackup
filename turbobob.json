@@ -17,5 +17,11 @@
 			"contextless_build": true
 		}
 	],
-	"docker_images": []
+	"docker_images": [
+		{
+			"image": "fn61/ubackup",
+			"dockerfile_path": "Dockerfile",
+			"auth_type": "creds_from_env"
+		}
+	]
 }

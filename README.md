@@ -1,5 +1,6 @@
 [![Build Status](https://img.shields.io/travis/function61/ubackup.svg?style=for-the-badge)](https://travis-ci.org/function61/ubackup)
 [![Download](https://img.shields.io/bintray/v/function61/ubackup/main.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/ubackup/main/_latestVersion#files)
+[![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
 What
 ----
@@ -60,31 +61,68 @@ If you are serious about security, with this design you could even store the pri
 in a [YubiKey](https://www.yubico.com/) (or some other form of HSM).
 
 
-How to use
-----------
+How to use, as Docker service
+-----------------------------
+
+First, do the configuration steps from below section "How to use, binary installation".
+
+You only need to do them to create correct `config.json` file. Now, convert that file for
+embedding as ENV variable:
 
 ```
-# download the program
+$ cat config.json | base64 -w 0
+```
 
+That value will be your `UBACKUP_CONF` ENV var.
+
+Now, just deploy Docker service as global service in the cluster (= runs on every node):
+
+```
+$ docker service create --name ubackup --mode global \
+	--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
+	-e UBACKUP_CONF=... \
+	fn61/ubackup:VERSION
+```
+
+Note: `VERSION` is the same as you would find for the binary installation.
+
+
+How to use, binary installation
+-------------------------------
+
+Download:
+
+```
 $ mkdir ~/ubackup && cd ~/ubackup/
 $ VERSION_TO_DOWNLOAD="..." # find this from Bintray. Looks like: 20180828_1449_b9d7759cf80f0b4a
 $ curl --location --fail --output ubackup "https://dl.bintray.com/function61/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && sudo chmod +x ubackup
+```
 
-# create encryption & decryption keys
-# (for security you should not actually ever store the decryption key on the same machine
-#  that takes the backups, but this is provided for demonstration purposes)
+Create encryption & decryption keys:
 
+```
 $ ./ubackup decryption-key-generate > backups.key
 $ ./ubackup decryption-key-to-encryption-key < backups.key > backups.pub
+```
 
-# create configuration file stub (and embed encryption key in the config)
+For security you should not actually ever store the decryption key on the same machine
+that takes the backups, but this is provided for demonstration purposes.
 
+Create configuration file stub (and embed encryption key in the config):
+
+```
 $ ./ubackup print-default-config --pubkey-file backups.pub > config.json
+```
 
-# edit the configuration further (specify your S3 bucket details)
+Edit the configuration further (specify your S3 bucket details)
 
+```
 $ vim config.json
+```
 
+Install & start the service:
+
+```
 $ ./ubackup scheduler install-systemd-service-file
 Wrote unit file to /etc/systemd/system/ubackup.service
 Run to enable on boot & to start now:
@@ -93,13 +131,12 @@ Run to enable on boot & to start now:
         $ systemctl status ubackup
 ```
 
-Currently this is offered as a binary that you'll pluck into your server nodes. It would
-not be hard to distribute this as a system-level Docker service (= runs on every node),
-but that is not implemented yet. See [#6](https://github.com/function61/ubackup/issues/6)
-
 
 Restoring from backup
 ---------------------
+
+Remember to test your backup recovery! Nobody actually wants backups, but everybody wants
+a restore. Without disaster recovery drills you don't know if your backups work.
 
 Download the `<HOSTNAME>/backup-<TIMESTAMP>.zip.aes` file from your S3 bucket.
 
@@ -127,7 +164,8 @@ instead to make AWS remove your old backups.
 You should also consider enabling bucket versioning so that if an attacker gained
 credentials used by this backup program, she cannot permantently destroy the backups by
 overwriting old backups with empty content (`s3:PutObject` can do that). Versioning would
-allow you to recover these tampered files in this described scenario.
+allow you to recover these tampered files in this described scenario. This effectively
+implements "ransomware protection".
 
 ```
 {
