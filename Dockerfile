@@ -2,7 +2,7 @@ FROM alpine:3.8
 
 WORKDIR /
 
-# don't add docker from apk because it's quite expensive - we only need the client
+# don't add docker from apk because it's quite expensive - we only need the client.
 # statically compiled downloads available here: https://download.docker.com/linux/static/stable/x86_64/
 RUN apk add ca-certificates \
 	&& mkdir -p /tmp/docker-install \
