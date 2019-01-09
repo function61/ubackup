@@ -46,9 +46,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e40ab68ae08e34370bc71116ce5395aad39c46968dfa970be575b7b042fca008"
+  digest = "1:d7dc6d28cf9d7f16a3c150bc0e451d75aceaf50f934e70cc2a98073cd2d62f5f"
   name = "github.com/function61/gokit"
   packages = [
+    "aws/s3facade",
     "cryptoutil",
     "dynversion",
     "envvar",
@@ -61,7 +62,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "7397b370de1295275a4670bce87cc8f5f64e33fa"
+  revision = "36f64b533f39f1feaf116566e1cae0c9ae8dfe57"
 
 [[projects]]
   branch = "master"
@@ -107,10 +108,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/aws",
-    "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/endpoints",
-    "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/s3",
+    "github.com/function61/gokit/aws/s3facade",
     "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/envvar",

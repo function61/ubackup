@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ func uploadBackup(conf Config, filename string, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 	logl.Info.Printf("Starting to upload %s", filename)
 
-	s3Client, err := s3Client(conf.AccessKeyId, conf.AccessKeySecret, conf.BucketRegion)
+	s3Client, err := s3facade.Client(conf.AccessKeyId, conf.AccessKeySecret, conf.BucketRegion)
 	if err != nil {
 		return err
 	}
