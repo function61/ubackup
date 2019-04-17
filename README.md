@@ -1,5 +1,5 @@
 [![Build Status](https://img.shields.io/travis/function61/ubackup.svg?style=for-the-badge)](https://travis-ci.org/function61/ubackup)
-[![Download](https://img.shields.io/bintray/v/function61/ubackup/main.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/ubackup/main/_latestVersion#files)
+[![Download](https://img.shields.io/bintray/v/function61/dl/ubackup.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/ubackup/_latestVersion#files)
 [![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
 What
@@ -95,7 +95,7 @@ Download:
 ```
 $ mkdir ~/ubackup && cd ~/ubackup/
 $ VERSION_TO_DOWNLOAD="..." # find this from Bintray. Looks like: 20180828_1449_b9d7759cf80f0b4a
-$ curl --location --fail --output ubackup "https://dl.bintray.com/function61/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && sudo chmod +x ubackup
+$ curl --location --fail --output ubackup "https://dl.bintray.com/function61/dl/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && sudo chmod +x ubackup
 ```
 
 Create encryption & decryption keys:
