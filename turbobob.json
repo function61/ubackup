@@ -9,7 +9,7 @@
 			"mount_destination": "/go/src/github.com/function61/ubackup",
 			"workdir": "/go/src/github.com/function61/ubackup",
 			"commands": {
-				"build": ["bin/bash.sh"],
+				"build": ["bin/build.sh"],
 				"dev": ["bash"]
 			}
 		},
