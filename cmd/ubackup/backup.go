@@ -20,7 +20,11 @@ func backupOneTarget(target BackupTarget, zipWriter *zip.Writer, logl *logex.Lev
 	// <serviceName>-<containerId>.dat
 	filenameInZip := fmt.Sprintf("%s-%s.dat", target.ServiceName, target.ContainerId)
 
-	targetBackupInsideZip, err := zipWriter.Create(filenameInZip)
+	targetBackupInsideZip, err := zipWriter.CreateHeader(&zip.FileHeader{
+		Name:     filenameInZip,
+		Method:   zip.Deflate,
+		Modified: time.Now(),
+	})
 	if err != nil {
 		return err
 	}
@@ -68,7 +72,7 @@ func backupAllContainers(ctx context.Context, dockerEndpoint string, encryptionP
 	}
 
 	// zip was chosen instead of tar, because with tar you need to know the length of the
-	// file beforehand, so it pretty much doesn't support streaming.
+	// file beforehand, so it pretty much doesn't support per-file streaming.
 	filename := fmt.Sprintf("backup-%s.zip.aes", time.Now().Format("2006-01-02_1504"))
 	encryptedZipFile, err := os.Create(filename)
 	if err != nil {
