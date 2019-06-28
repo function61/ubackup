@@ -18,7 +18,7 @@ import (
 
 func backupOneTarget(target BackupTarget, zipWriter *zip.Writer, logl *logex.Leveled) error {
 	// <serviceName>-<containerId>.dat
-	filenameInZip := fmt.Sprintf("%s-%s.dat", target.ServiceName, target.ContainerId)
+	filenameInZip := fmt.Sprintf("%s-%s.dat", target.ServiceName, target.ContainerId[0:12])
 
 	targetBackupInsideZip, err := zipWriter.CreateHeader(&zip.FileHeader{
 		Name:     filenameInZip,
