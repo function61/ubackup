@@ -51,7 +51,7 @@ func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]Backup
 
 			targets = append(targets, BackupTarget{
 				ServiceName:   serviceName,
-				ContainerId:   inspected.Id,
+				TaskId:        inspected.Id[0:12], // Docker CLI truncates ids to this long. using same here to shorten filenames
 				BackupCommand: value,
 			})
 		}

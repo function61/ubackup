@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -17,9 +19,26 @@ type Config struct {
 	EncryptionPublicKey string `json:"encryption_publickey"`
 }
 
-func readConfig() (*Config, error) {
+func readConfigFromFile() (*Config, error) {
 	conf := &Config{}
 	return conf, jsonfile.Read("config.json", conf, true)
+}
+
+func readConfigFromEnvOrFile() (*Config, error) {
+	conf := &Config{}
+	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
+	if err == nil { // FIXME: this swallows invalid base64 syntax error
+		if err := jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true); err != nil {
+			return nil, err
+		}
+	} else {
+		conf, err = readConfigFromFile()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return conf, nil
 }
 
 func defaultConfig(pubkeyFilePath string) *Config {

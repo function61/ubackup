@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/function61/gokit/dynversion"
-	"github.com/function61/gokit/envvar"
-	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/spf13/cobra"
-	"log"
+	"io"
 	"os"
 )
 
@@ -27,7 +24,7 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			if err := backupAllContainersAndUpload(context.Background(), rootLogger); err != nil {
+			if err := backupAllContainers(context.Background(), rootLogger); err != nil {
 				panic(err)
 			}
 		},
@@ -36,6 +33,7 @@ func main() {
 	app.AddCommand(schedulerEntry())
 	app.AddCommand(printDefaultConfigEntry())
 	app.AddCommand(decryptEntry())
+	app.AddCommand(manualEntry())
 	app.AddCommand(decryptionKeyGenerateEntry())
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
@@ -45,44 +43,32 @@ func main() {
 	}
 }
 
-func backupAllContainersAndUpload(ctx context.Context, logger *log.Logger) error {
-	logl := logex.Levels(logger)
-
-	// read config either from ENV var or from a file
-	conf := &Config{}
-	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
-	if err == nil { // FIXME: this swallows invalid base64 syntax error
-		if err := jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true); err != nil {
-			return err
-		}
-	} else {
-		conf, err = readConfig()
-		if err != nil {
-			return err
-		}
-	}
-
-	filename, err := backupAllContainers(
-		ctx,
-		conf.DockerEndpoint,
-		conf.EncryptionPublicKey,
-		logex.Prefix("backupAllContainers", logger))
+func manual(serviceName string, taskId string) error {
+	conf, err := readConfigFromEnvOrFile()
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		// remove backup archive after upload
-		if err := os.Remove(filename); err != nil {
-			logl.Error.Printf("error cleaning up backup: %v", err)
-		}
-	}()
-
-	if err := uploadBackup(*conf, filename, logex.Prefix("uploadBackup", logger)); err != nil {
-		return err
+	target := BackupTarget{
+		ServiceName: serviceName,
+		TaskId:      taskId,
 	}
 
-	logl.Info.Println("completed succesfully")
+	return backupOneTarget(target, *conf, logex.Levels(logex.StandardLogger()), func(backupSink io.Writer) error {
+		_, err := io.Copy(backupSink, os.Stdin)
+		return err
+	})
+}
 
-	return nil
+func manualEntry() *cobra.Command {
+	return &cobra.Command{
+		Use:   "manual-backup [serviceName] [taskId]",
+		Short: "Upload one manual backup",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := manual(args[0], args[1]); err != nil {
+				panic(err)
+			}
+		},
+	}
 }

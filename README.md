@@ -13,8 +13,8 @@ Stateful containers are gross, but there are use cases where you need them.
 ```
 +------------+     +-----------------------------+      +------------------------------+      +--------------+
 |            |     |                             |      |                              |      |              |
-| Once a day +-----> For each container:         +------> Compress all containers'     +------> Upload to S3 |
-|            |     | - if BACKUP_COMMAND defined |      | backups into .zip archive    |      |              |
+| Once a day +-----> For each container:         +------> Compress & encrypt stdout    +------> Upload to S3 |
+|            |     | - if BACKUP_COMMAND defined |      | of BACKUP_COMMAND            |      |              |
 +------------+     |                             |      |                              |      +--------------+
                    +-----------+-----^-----------+      +------------------------------+
                                |     |
@@ -41,9 +41,8 @@ For a directory, you could use: `BACKUP_COMMAND=tar -cC /yourdirectory -f - .` (
 `$ tar` will write the archive to `stdout`, `.` just means to process all files in the
 selected directory)
 
-This simple approach is suprprisingly flexible and its streaming approach is more efficient
-than having to write temporary files. µbackup shoves all containers' backups in a single
-compressed .zip file.
+This simple approach is surprisingly flexible and its streaming approach is more efficient
+than having to write temporary files.
 
 You don't have to compress the file inside the container, since that is taken care of for you.
 
@@ -51,11 +50,12 @@ You don't have to compress the file inside the container, since that is taken ca
 Security & encryption
 ---------------------
 
-The backups are encrypted with per-backup 256-bit AES (in CTR mode with proper IV)
+The backups are encrypted with per-backup 256-bit AES (in CTR mode with random IV)
 key, which itself is asymmetrically encrypted with 4096-bit RSA public key. This means
 that immediately after the backup is complete, µbackup forgets/loses access to the actual
 encryption key, and only the user holding the private key will be able to decrypt the
-backup. This way the servers nor Amazon can ever access your backups.
+backup. This way the servers nor Amazon can ever access your backups (if you store the
+private key somewhere else).
 
 If you are serious about security, with this design you could even store the private key
 in a [YubiKey](https://www.yubico.com/) (or some other form of HSM).
@@ -138,18 +138,14 @@ Restoring from backup
 Remember to test your backup recovery! Nobody actually wants backups, but everybody wants
 a restore. Without disaster recovery drills you don't know if your backups work.
 
-Download the `<HOSTNAME>/backup-<TIMESTAMP>.zip.aes` file from your S3 bucket.
+Download the `.gz.aes` backup file from your S3 bucket.
 
 The `decrypt` verb of µbackup requires path to your decryption key, reads the encrypted
 backup file from stdin and outputs the decrypted file to stdout.
 
 ```
-./ubackup decrypt backups.key < backup-2019-01-03_1340.zip.aes > backup-2019-01-03_1340.zip
+./ubackup decrypt backups.key < something.gz.aes > something
 ```
-
-You could even pipe output directly to unzip and exclude decompression of files that you
-are not interested in, so the backup restore is faster because unnecessary files don't
-have to be written to disk!
 
 
 IAM policy

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -23,7 +24,12 @@ func decrypt(pathToPrivateKey string, ciphertextInput io.Reader, plaintextOutput
 		return err
 	}
 
-	plaintextReader, err := pkencryptedstream.Reader(ciphertextInput, privateKey)
+	compressedPlaintextReader, err := pkencryptedstream.Reader(ciphertextInput, privateKey)
+	if err != nil {
+		return err
+	}
+
+	plaintextReader, err := gzip.NewReader(compressedPlaintextReader)
 	if err != nil {
 		return err
 	}

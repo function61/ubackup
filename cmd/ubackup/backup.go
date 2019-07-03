@@ -1,14 +1,14 @@
 package main
 
 import (
-	"archive/zip"
 	"bytes"
+	"compress/gzip"
 	"context"
-	"fmt"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/pkencryptedstream"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -16,93 +16,110 @@ import (
 	"time"
 )
 
-func backupOneTarget(target BackupTarget, zipWriter *zip.Writer, logl *logex.Leveled) error {
-	// <serviceName>-<containerId>.dat
-	filenameInZip := fmt.Sprintf("%s-%s.dat", target.ServiceName, target.ContainerId[0:12])
+func backupAllContainers(ctx context.Context, logger *log.Logger) error {
+	logl := logex.Levels(logger)
 
-	targetBackupInsideZip, err := zipWriter.CreateHeader(&zip.FileHeader{
-		Name:     filenameInZip,
-		Method:   zip.Deflate,
-		Modified: time.Now(),
-	})
+	conf, err := readConfigFromEnvOrFile()
 	if err != nil {
 		return err
 	}
 
-	// FIXME
-	backupCommand := strings.Split(target.BackupCommand, " ")
+	logl.Info.Println("starting discovery")
 
-	logl.Debug.Printf("Backup command: %v", backupCommand)
-
-	dockerExecCmd := append([]string{
-		"docker",
-		"exec",
-		target.ContainerId,
-	}, backupCommand...)
-
-	backupCmd := exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...)
-	stdout, err := backupCmd.StdoutPipe()
+	targets, err := discoverBackupTargets(ctx, conf.DockerEndpoint)
 	if err != nil {
 		return err
 	}
 
-	if err := backupCmd.Start(); err != nil {
-		return err
+	for _, target := range targets {
+		logl.Info.Printf("backing up %s", target.TaskId)
+
+		if err := backupOneTarget(target, *conf, logl, func(backupSink io.Writer) error {
+			// FIXME
+			backupCommand := strings.Split(target.BackupCommand, " ")
+
+			logl.Debug.Printf("backup command: %v", backupCommand)
+
+			dockerExecCmd := append([]string{
+				"docker",
+				"exec",
+				target.TaskId,
+			}, backupCommand...)
+
+			backupCmd := exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...)
+			stdout, err := backupCmd.StdoutPipe()
+			if err != nil {
+				return err
+			}
+
+			if err := backupCmd.Start(); err != nil {
+				return err
+			}
+
+			if _, err := io.Copy(backupSink, stdout); err != nil {
+				return err
+			}
+
+			if err := backupCmd.Wait(); err != nil {
+				return err
+			}
+
+			return nil
+		}); err != nil {
+			return err
+		}
 	}
 
-	if _, err := io.Copy(targetBackupInsideZip, stdout); err != nil {
-		return err
-	}
-
-	if err := backupCmd.Wait(); err != nil {
-		return err
-	}
+	logl.Info.Println("completed succesfully")
 
 	return nil
 }
 
-func backupAllContainers(ctx context.Context, dockerEndpoint string, encryptionPublicKey string, logger *log.Logger) (string, error) {
-	logl := logex.Levels(logger)
-
-	logl.Info.Println("Starting discovery")
-
-	targets, err := discoverBackupTargets(ctx, dockerEndpoint)
+func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, produce func(io.Writer) error) error {
+	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
-		return "", err
+		return err
 	}
-
-	// zip was chosen instead of tar, because with tar you need to know the length of the
-	// file beforehand, so it pretty much doesn't support per-file streaming.
-	filename := fmt.Sprintf("backup-%s.zip.aes", time.Now().Format("2006-01-02_1504"))
-	encryptedZipFile, err := os.Create(filename)
-	if err != nil {
-		return "", err
-	}
-	defer encryptedZipFile.Close()
-
-	publicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(bytes.NewBufferString(encryptionPublicKey))
-	if err != nil {
-		return "", err
-	}
-
-	encryptedZip, err := pkencryptedstream.Writer(encryptedZipFile, publicKey)
-	if err != nil {
-		return "", err
-	}
-	defer encryptedZip.Close()
-
-	zipWriter := zip.NewWriter(encryptedZip)
-	defer zipWriter.Close()
-
-	for _, target := range targets {
-		logl.Info.Printf("Backing up %s", target.ContainerId)
-
-		if err := backupOneTarget(target, zipWriter, logl); err != nil {
-			return "", err
+	defer func() {
+		// remove backup archive after upload
+		if err := os.Remove(tempFile.Name()); err != nil {
+			logl.Error.Printf("error cleaning up backup tempfile: %v", err)
 		}
+	}()
+
+	backup := Backup{
+		Started: time.Now(),
+		Target:  target,
 	}
 
-	logl.Debug.Println("Completed")
+	publicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(bytes.NewBufferString(conf.EncryptionPublicKey))
+	if err != nil {
+		return err
+	}
 
-	return filename, nil
+	tempFileEncrypted, err := pkencryptedstream.Writer(tempFile, publicKey)
+	if err != nil {
+		return err
+	}
+	defer tempFileEncrypted.Close()
+
+	tempFileEncryptedCompressed := gzip.NewWriter(tempFileEncrypted)
+
+	if err := produce(tempFileEncryptedCompressed); err != nil {
+		return err
+	}
+
+	if err := tempFileEncryptedCompressed.Close(); err != nil {
+		return err
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+
+	if err := uploadBackup(conf, tempFile.Name(), backup, logl); err != nil {
+		return err
+	}
+
+	return nil
 }
