@@ -15,7 +15,7 @@ func uploadBackup(conf Config, filename string, backup Backup, logl *logex.Level
 		return err
 	}
 
-	// <SERVICE_NAME>/<TIME>_<HOSTNAME>_<TASK_ID>.aes
+	// <SERVICE_NAME>/<TIME>_<HOSTNAME>_<TASK_ID>.gz.aes
 	s3key := fmt.Sprintf(
 		"%s/%s_%s_%s.gz.aes",
 		backup.Target.ServiceName,
