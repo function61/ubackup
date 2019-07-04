@@ -1,45 +1,15 @@
 package main
 
 import (
-	"compress/gzip"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"github.com/function61/gokit/cryptoutil"
-	"github.com/function61/gokit/pkencryptedstream"
+	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
 )
-
-func decrypt(pathToPrivateKey string, ciphertextInput io.Reader, plaintextOutput io.Writer) error {
-	pkeyFile, err := os.Open(pathToPrivateKey)
-	if err != nil {
-		return err
-	}
-	defer pkeyFile.Close()
-
-	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(pkeyFile)
-	if err != nil {
-		return err
-	}
-
-	compressedPlaintextReader, err := pkencryptedstream.Reader(ciphertextInput, privateKey)
-	if err != nil {
-		return err
-	}
-
-	plaintextReader, err := gzip.NewReader(compressedPlaintextReader)
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(plaintextOutput, plaintextReader); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func decryptionKeyGenerate(out io.Writer) error {
 	// using 4096 to be super safe, though 2048 seems to be what's currently used
@@ -67,7 +37,8 @@ func decryptionKeyToEncryptionKey(privKeyIn io.Reader, pubKeyOut io.Writer) erro
 
 	if _, err := pubKeyOut.Write(cryptoutil.MarshalPemBytes(
 		x509.MarshalPKCS1PublicKey(&privKey.PublicKey),
-		cryptoutil.PemTypeRsaPublicKey)); err != nil {
+		cryptoutil.PemTypeRsaPublicKey),
+	); err != nil {
 		return err
 	}
 
@@ -80,7 +51,13 @@ func decryptEntry() *cobra.Command {
 		Short: "Decrypts an encrypted backup file with your private key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := decrypt(args[0], os.Stdin, os.Stdout); err != nil {
+			privateKeyFile, err := os.Open(args[0])
+			if err != nil {
+				panic(err)
+			}
+			defer privateKeyFile.Close()
+
+			if err := backupfile.DecryptAndDecompress(privateKeyFile, os.Stdin, os.Stdout); err != nil {
 				panic(err)
 			}
 		},

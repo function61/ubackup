@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
-	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/pkencryptedstream"
+	"github.com/function61/ubackup/pkg/backupfile"
 	"io"
 	"io/ioutil"
 	"log"
@@ -92,24 +90,16 @@ func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, prod
 		Target:  target,
 	}
 
-	publicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(bytes.NewBufferString(conf.EncryptionPublicKey))
+	backupWriter, err := backupfile.CreateEncryptorAndCompressor(bytes.NewBufferString(conf.EncryptionPublicKey), tempFile)
 	if err != nil {
 		return err
 	}
 
-	tempFileEncrypted, err := pkencryptedstream.Writer(tempFile, publicKey)
-	if err != nil {
-		return err
-	}
-	defer tempFileEncrypted.Close()
-
-	tempFileEncryptedCompressed := gzip.NewWriter(tempFileEncrypted)
-
-	if err := produce(tempFileEncryptedCompressed); err != nil {
+	if err := produce(backupWriter); err != nil {
 		return err
 	}
 
-	if err := tempFileEncryptedCompressed.Close(); err != nil {
+	if err := backupWriter.Close(); err != nil {
 		return err
 	}
 
