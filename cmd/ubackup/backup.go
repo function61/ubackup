@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/backupfile"
+	"github.com/function61/ubackup/pkg/ubconfig"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,7 +18,7 @@ import (
 func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
-	conf, err := readConfigFromEnvOrFile()
+	conf, err := ubconfig.ReadFromEnvOrFile()
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	return nil
 }
 
-func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, produce func(io.Writer) error) error {
+func backupOneTarget(target BackupTarget, conf ubconfig.Config, logl *logex.Leveled, produce func(io.Writer) error) error {
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
 		return err

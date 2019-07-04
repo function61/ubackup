@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -45,7 +47,7 @@ func main() {
 
 func manualEntry() *cobra.Command {
 	manual := func(serviceName string, taskId string) error {
-		conf, err := readConfigFromEnvOrFile()
+		conf, err := ubconfig.ReadFromEnvOrFile()
 		if err != nil {
 			return err
 		}
@@ -71,4 +73,21 @@ func manualEntry() *cobra.Command {
 			}
 		},
 	}
+}
+
+func printDefaultConfigEntry() *cobra.Command {
+	pubkeyFilePath := ""
+
+	cmd := &cobra.Command{
+		Use:   "print-default-config",
+		Short: "Shows you a default config file format as an example",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath))
+		},
+	}
+
+	cmd.Flags().StringVarP(&pubkeyFilePath, "pubkey-file", "p", pubkeyFilePath, "Path to public key file")
+
+	return cmd
 }

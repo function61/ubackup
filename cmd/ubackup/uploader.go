@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/ubackup/pkg/ubconfig"
 	"io"
 	"os"
 )
@@ -19,11 +20,11 @@ type BackupStorage interface {
 }
 
 type s3BackupStorage struct {
-	conf Config
+	conf ubconfig.Config
 	logl *logex.Leveled
 }
 
-func NewS3BackupStorage(conf Config, logl *logex.Leveled) (BackupStorage, error) {
+func NewS3BackupStorage(conf ubconfig.Config, logl *logex.Leveled) (BackupStorage, error) {
 	return &s3BackupStorage{conf, logl}, nil
 }
 
