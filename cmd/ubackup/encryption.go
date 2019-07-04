@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -8,6 +9,7 @@ import (
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -46,18 +48,29 @@ func decryptionKeyToEncryptionKey(privKeyIn io.Reader, pubKeyOut io.Writer) erro
 }
 
 func decryptEntry() *cobra.Command {
+	decrypt := func(pathToPrivateKey string) error {
+		privateKeyFile, err := ioutil.ReadFile(pathToPrivateKey)
+		if err != nil {
+			return err
+		}
+
+		if err := backupfile.DecryptAndDecompress(
+			bytes.NewBuffer(privateKeyFile),
+			os.Stdin,
+			os.Stdout,
+		); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
 	return &cobra.Command{
 		Use:   "decrypt [pathToPrivateKey]",
 		Short: "Decrypts an encrypted backup file with your private key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			privateKeyFile, err := os.Open(args[0])
-			if err != nil {
-				panic(err)
-			}
-			defer privateKeyFile.Close()
-
-			if err := backupfile.DecryptAndDecompress(privateKeyFile, os.Stdin, os.Stdout); err != nil {
+			if err := decrypt(args[0]); err != nil {
 				panic(err)
 			}
 		},
