@@ -41,7 +41,7 @@ func main() {
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
 	if err := app.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
