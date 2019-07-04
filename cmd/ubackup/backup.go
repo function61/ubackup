@@ -35,7 +35,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	for _, target := range targets {
 		logl.Info.Printf("backing up %s", target.TaskId)
 
-		if err := backupOneTarget(target, *conf, logl, func(backupSink io.Writer) error {
+		if err := backupOneTarget(target, *conf, logger, func(backupSink io.Writer) error {
 			// FIXME
 			backupCommand := strings.Split(target.BackupCommand, " ")
 
@@ -76,7 +76,9 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	return nil
 }
 
-func backupOneTarget(target ubtypes.BackupTarget, conf ubconfig.Config, logl *logex.Leveled, produce func(io.Writer) error) error {
+func backupOneTarget(target ubtypes.BackupTarget, conf ubconfig.Config, logger *log.Logger, produce func(io.Writer) error) error {
+	logl := logex.Levels(logger)
+
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
 		return err
@@ -111,7 +113,7 @@ func backupOneTarget(target ubtypes.BackupTarget, conf ubconfig.Config, logl *lo
 		return err
 	}
 
-	storage, err := ubstorage.StorageFromConfig(conf, logl)
+	storage, err := ubstorage.StorageFromConfig(conf, logger)
 	if err != nil {
 		return err
 	}

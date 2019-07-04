@@ -171,11 +171,17 @@ implements "ransomware protection".
             "Effect": "Allow",
             "Action": [
                 "s3:PutObject",
+                "s3:GetObject",
                 "s3:PutObjectAcl"
             ],
-            "Resource": [
-                "arn:aws:s3:::YOURBUCKET/*"
-            ]
+            "Resource": "arn:aws:s3:::YOURBUCKET/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": "arn:aws:s3:::YOURBUCKET*"
         }
     ]
 }

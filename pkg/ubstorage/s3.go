@@ -1,6 +1,7 @@
 package ubstorage
 
 import (
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -10,6 +11,10 @@ import (
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"time"
 )
 
 const (
@@ -54,4 +59,66 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 	s.logl.Info.Println("Upload complete")
 
 	return nil
+}
+
+func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
+	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	object, err := s3Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s.conf.Bucket),
+		Key:    &id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return object.Body, nil
+}
+
+var parseTimestampRe = regexp.MustCompile("^[^Z]+Z")
+
+func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
+	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := s3Client.ListObjects(&s3.ListObjectsInput{
+		Bucket: aws.String(s.conf.Bucket),
+		Prefix: aws.String(serviceId + "/"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if *list.IsTruncated {
+		return nil, errors.New("truncated list - pagination not yet supported")
+	}
+
+	backups := []StoredBackup{}
+
+	for _, item := range list.Contents {
+		key := *item.Key
+
+		// "/foo/bar.txt" => "bar.txt"
+		basename := filepath.Base(key)
+
+		timestamp, err := time.Parse(dateFormat, parseTimestampRe.FindString(basename))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse timestamp for %s: %v", basename, err)
+		}
+
+		backups = append(backups, StoredBackup{
+			ID:          key,
+			Timestamp:   timestamp,
+			Description: basename,
+		})
+	}
+
+	sort.Slice(backups, func(i, j int) bool { return backups[i].Timestamp.Before(backups[j].Timestamp) })
+
+	return backups, nil
 }

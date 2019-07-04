@@ -25,9 +25,7 @@ func main() {
 		Short: "Takes a backup now",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := logex.StandardLogger()
-
-			if err := backupAllContainers(context.Background(), rootLogger); err != nil {
+			if err := backupAllContainers(context.Background(), logex.StandardLogger()); err != nil {
 				panic(err)
 			}
 		},
@@ -37,6 +35,7 @@ func main() {
 	app.AddCommand(printDefaultConfigEntry())
 	app.AddCommand(decryptEntry())
 	app.AddCommand(manualEntry())
+	app.AddCommand(storageEntry())
 	app.AddCommand(decryptionKeyGenerateEntry())
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
@@ -58,7 +57,7 @@ func manualEntry() *cobra.Command {
 			TaskId:      taskId,
 		}
 
-		return backupOneTarget(target, *conf, logex.Levels(logex.StandardLogger()), func(backupSink io.Writer) error {
+		return backupOneTarget(target, *conf, logex.StandardLogger(), func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
 		})
