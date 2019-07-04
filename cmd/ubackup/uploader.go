@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
+	"io"
 	"os"
 )
 
-func uploadBackup(conf Config, filename string, backup Backup, logl *logex.Leveled) error {
+func uploadBackup(conf Config, content io.ReadSeeker, backup Backup, logl *logex.Leveled) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
@@ -19,7 +20,7 @@ func uploadBackup(conf Config, filename string, backup Backup, logl *logex.Level
 	s3key := fmt.Sprintf(
 		"%s/%s_%s_%s.gz.aes",
 		backup.Target.ServiceName,
-		backup.Started.Format("2006-01-02 1504Z"),
+		backup.Started.UTC().Format("2006-01-02 1504Z"),
 		hostname,
 		backup.Target.TaskId)
 
@@ -28,19 +29,13 @@ func uploadBackup(conf Config, filename string, backup Backup, logl *logex.Level
 		return err
 	}
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	logl.Info.Printf("Starting to upload %s", s3key)
 
 	if _, err := s3Client.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(conf.Bucket),
 		Key:         &s3key,
 		ContentType: aws.String("application/octet-stream"),
-		Body:        file,
+		Body:        content,
 	}); err != nil {
 		return err
 	}

@@ -84,6 +84,7 @@ func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, prod
 			logl.Error.Printf("error cleaning up backup tempfile: %v", err)
 		}
 	}()
+	defer tempFile.Close()
 
 	backup := Backup{
 		Started: time.Now(),
@@ -103,11 +104,11 @@ func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, prod
 		return err
 	}
 
-	if err := tempFile.Close(); err != nil {
+	if _, err := tempFile.Seek(0, io.SeekStart); err != nil {
 		return err
 	}
 
-	if err := uploadBackup(conf, tempFile.Name(), backup, logl); err != nil {
+	if err := uploadBackup(conf, tempFile, backup, logl); err != nil {
 		return err
 	}
 
