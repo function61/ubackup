@@ -10,7 +10,24 @@ import (
 	"os"
 )
 
-func uploadBackup(conf Config, content io.ReadSeeker, backup Backup, logl *logex.Leveled) error {
+const (
+	dateFormat = "2006-01-02 1504Z"
+)
+
+type BackupStorage interface {
+	Put(backup Backup, content io.ReadSeeker) error
+}
+
+type s3BackupStorage struct {
+	conf Config
+	logl *logex.Leveled
+}
+
+func NewS3BackupStorage(conf Config, logl *logex.Leveled) (BackupStorage, error) {
+	return &s3BackupStorage{conf, logl}, nil
+}
+
+func (s *s3BackupStorage) Put(backup Backup, content io.ReadSeeker) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
@@ -20,19 +37,19 @@ func uploadBackup(conf Config, content io.ReadSeeker, backup Backup, logl *logex
 	s3key := fmt.Sprintf(
 		"%s/%s_%s_%s.gz.aes",
 		backup.Target.ServiceName,
-		backup.Started.UTC().Format("2006-01-02 1504Z"),
+		backup.Started.UTC().Format(dateFormat),
 		hostname,
 		backup.Target.TaskId)
 
-	s3Client, err := s3facade.Client(conf.AccessKeyId, conf.AccessKeySecret, conf.BucketRegion)
+	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
 	if err != nil {
 		return err
 	}
 
-	logl.Info.Printf("Starting to upload %s", s3key)
+	s.logl.Info.Printf("Starting to upload %s", s3key)
 
 	if _, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket:      aws.String(conf.Bucket),
+		Bucket:      aws.String(s.conf.Bucket),
 		Key:         &s3key,
 		ContentType: aws.String("application/octet-stream"),
 		Body:        content,
@@ -40,7 +57,7 @@ func uploadBackup(conf Config, content io.ReadSeeker, backup Backup, logl *logex
 		return err
 	}
 
-	logl.Info.Println("Upload complete")
+	s.logl.Info.Println("Upload complete")
 
 	return nil
 }

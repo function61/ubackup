@@ -108,7 +108,12 @@ func backupOneTarget(target BackupTarget, conf Config, logl *logex.Leveled, prod
 		return err
 	}
 
-	if err := uploadBackup(conf, tempFile, backup, logl); err != nil {
+	storage, err := NewS3BackupStorage(conf, logl)
+	if err != nil {
+		return err
+	}
+
+	if err := storage.Put(backup, tempFile); err != nil {
 		return err
 	}
 
