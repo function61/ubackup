@@ -6,11 +6,16 @@ import (
 	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/promswarmconnect/pkg/udocker"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"net/http"
 )
 
+const (
+	backupCommandEnvKey = "BACKUP_COMMAND"
+)
+
 // returns containers that have ENV var "BACKUP_COMMAND" defined
-func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]BackupTarget, error) {
+func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("udocker.Client: %v", err)
@@ -35,7 +40,7 @@ func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]Backup
 		return nil, err
 	}
 
-	targets := []BackupTarget{}
+	targets := []ubtypes.BackupTarget{}
 
 	for _, inspected := range inspecteds {
 		for _, envSerialized := range inspected.Config.Env {
@@ -49,7 +54,7 @@ func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]Backup
 				serviceName = "none"
 			}
 
-			targets = append(targets, BackupTarget{
+			targets = append(targets, ubtypes.BackupTarget{
 				ServiceName:   serviceName,
 				TaskId:        inspected.Id[0:12], // Docker CLI truncates ids to this long. using same here to shorten filenames
 				BackupCommand: value,

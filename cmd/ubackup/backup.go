@@ -6,6 +6,8 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/function61/ubackup/pkg/ubconfig"
+	"github.com/function61/ubackup/pkg/ubstorage"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"io/ioutil"
 	"log"
@@ -74,7 +76,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	return nil
 }
 
-func backupOneTarget(target BackupTarget, conf ubconfig.Config, logl *logex.Leveled, produce func(io.Writer) error) error {
+func backupOneTarget(target ubtypes.BackupTarget, conf ubconfig.Config, logl *logex.Leveled, produce func(io.Writer) error) error {
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
 		return err
@@ -87,7 +89,7 @@ func backupOneTarget(target BackupTarget, conf ubconfig.Config, logl *logex.Leve
 	}()
 	defer tempFile.Close()
 
-	backup := Backup{
+	backup := ubtypes.Backup{
 		Started: time.Now(),
 		Target:  target,
 	}
@@ -109,7 +111,7 @@ func backupOneTarget(target BackupTarget, conf ubconfig.Config, logl *logex.Leve
 		return err
 	}
 
-	storage, err := NewS3BackupStorage(conf, logl)
+	storage, err := ubstorage.StorageFromConfig(conf, logl)
 	if err != nil {
 		return err
 	}

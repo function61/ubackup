@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -52,7 +53,7 @@ func manualEntry() *cobra.Command {
 			return err
 		}
 
-		target := BackupTarget{
+		target := ubtypes.BackupTarget{
 			ServiceName: serviceName,
 			TaskId:      taskId,
 		}

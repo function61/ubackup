@@ -1,11 +1,7 @@
-package main
+package ubtypes
 
 import (
 	"time"
-)
-
-const (
-	backupCommandEnvKey = "BACKUP_COMMAND"
 )
 
 type Backup struct {

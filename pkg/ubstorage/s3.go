@@ -1,4 +1,4 @@
-package main
+package ubstorage
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"os"
 )
@@ -15,20 +16,12 @@ const (
 	dateFormat = "2006-01-02 1504Z"
 )
 
-type BackupStorage interface {
-	Put(backup Backup, content io.ReadSeeker) error
-}
-
 type s3BackupStorage struct {
 	conf ubconfig.Config
 	logl *logex.Leveled
 }
 
-func NewS3BackupStorage(conf ubconfig.Config, logl *logex.Leveled) (BackupStorage, error) {
-	return &s3BackupStorage{conf, logl}, nil
-}
-
-func (s *s3BackupStorage) Put(backup Backup, content io.ReadSeeker) error {
+func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
