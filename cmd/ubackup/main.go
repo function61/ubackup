@@ -43,24 +43,24 @@ func main() {
 	}
 }
 
-func manual(serviceName string, taskId string) error {
-	conf, err := readConfigFromEnvOrFile()
-	if err != nil {
-		return err
-	}
-
-	target := BackupTarget{
-		ServiceName: serviceName,
-		TaskId:      taskId,
-	}
-
-	return backupOneTarget(target, *conf, logex.Levels(logex.StandardLogger()), func(backupSink io.Writer) error {
-		_, err := io.Copy(backupSink, os.Stdin)
-		return err
-	})
-}
-
 func manualEntry() *cobra.Command {
+	manual := func(serviceName string, taskId string) error {
+		conf, err := readConfigFromEnvOrFile()
+		if err != nil {
+			return err
+		}
+
+		target := BackupTarget{
+			ServiceName: serviceName,
+			TaskId:      taskId,
+		}
+
+		return backupOneTarget(target, *conf, logex.Levels(logex.StandardLogger()), func(backupSink io.Writer) error {
+			_, err := io.Copy(backupSink, os.Stdin)
+			return err
+		})
+	}
+
 	return &cobra.Command{
 		Use:   "manual-backup [serviceName] [taskId]",
 		Short: "Upload one manual backup",
