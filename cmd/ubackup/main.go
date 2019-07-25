@@ -6,6 +6,7 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/spf13/cobra"
@@ -57,10 +58,10 @@ func manualEntry() *cobra.Command {
 			TaskId:      taskId,
 		}
 
-		return backupOneTarget(target, *conf, logex.StandardLogger(), func(backupSink io.Writer) error {
+		return ubbackup.BackupAndStore(context.Background(), target, *conf, func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
-		})
+		}, logex.StandardLogger())
 	}
 
 	return &cobra.Command{
