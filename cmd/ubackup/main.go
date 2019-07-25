@@ -58,7 +58,7 @@ func manualEntry() *cobra.Command {
 			TaskId:      taskId,
 		}
 
-		return ubbackup.BackupAndStore(context.Background(), target, *conf, func(backupSink io.Writer) error {
+		return ubbackup.BackupAndStore(context.Background(), target, conf.Config, func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
 		}, logex.StandardLogger())

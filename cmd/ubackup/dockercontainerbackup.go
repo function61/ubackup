@@ -29,7 +29,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	for _, target := range targets {
 		logl.Info.Printf("backing up %s", target.TaskId)
 
-		if err := ubbackup.BackupAndStore(ctx, target, *conf, func(backupSink io.Writer) error {
+		if err := ubbackup.BackupAndStore(ctx, target, conf.Config, func(backupSink io.Writer) error {
 			// FIXME
 			backupCommand := strings.Split(target.BackupCommand, " ")
 

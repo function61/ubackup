@@ -8,8 +8,12 @@ import (
 	"io/ioutil"
 )
 
+type DockerUseCaseConfig struct {
+	DockerEndpoint string `json:"docker_endpoint"`
+	Config         Config `json:"config"`
+}
+
 type Config struct {
-	DockerEndpoint      string `json:"docker_endpoint"`
 	Bucket              string `json:"bucket"`
 	BucketRegion        string `json:"bucket_region"`
 	AccessKeyId         string `json:"access_key_id"`
@@ -17,8 +21,8 @@ type Config struct {
 	EncryptionPublicKey string `json:"encryption_publickey"`
 }
 
-func ReadFromEnvOrFile() (*Config, error) {
-	conf := &Config{}
+func ReadFromEnvOrFile() (*DockerUseCaseConfig, error) {
+	conf := &DockerUseCaseConfig{}
 	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
 	if err == nil { // FIXME: this swallows invalid base64 syntax error
 		return conf, jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true)
@@ -27,7 +31,7 @@ func ReadFromEnvOrFile() (*Config, error) {
 	}
 }
 
-func DefaultConfig(pubkeyFilePath string) *Config {
+func DefaultConfig(pubkeyFilePath string) *DockerUseCaseConfig {
 	publicKeyContent := ""
 
 	if pubkeyFilePath != "" {
@@ -39,12 +43,14 @@ func DefaultConfig(pubkeyFilePath string) *Config {
 		publicKeyContent = string(content)
 	}
 
-	return &Config{
-		DockerEndpoint:      "unix:///var/run/docker.sock",
-		Bucket:              "mybucket",
-		BucketRegion:        endpoints.UsEast1RegionID,
-		AccessKeyId:         "",
-		AccessKeySecret:     "",
-		EncryptionPublicKey: publicKeyContent,
+	return &DockerUseCaseConfig{
+		DockerEndpoint: "unix:///var/run/docker.sock",
+		Config: Config{
+			Bucket:              "mybucket",
+			BucketRegion:        endpoints.UsEast1RegionID,
+			AccessKeyId:         "",
+			AccessKeySecret:     "",
+			EncryptionPublicKey: publicKeyContent,
+		},
 	}
 }
