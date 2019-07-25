@@ -7,20 +7,22 @@ import (
 	"io"
 )
 
-type encryptoAndCompressor struct {
+type encryptorAndCompressor struct {
 	pkencryptedStream io.WriteCloser
 	gzipWriter        io.WriteCloser
 }
 
-func (f *encryptoAndCompressor) Write(buf []byte) (int, error) {
+func (f *encryptorAndCompressor) Write(buf []byte) (int, error) {
 	return f.gzipWriter.Write(buf)
 }
 
-func (f *encryptoAndCompressor) Close() error {
+func (f *encryptorAndCompressor) Close() error {
+	// gzipWriter does not close the underlying io.Writer
 	if err := f.gzipWriter.Close(); err != nil {
 		return err
 	}
 
+	// is an cipher.StreamWriter which calls close on the underlying io.Writer
 	return f.pkencryptedStream.Close()
 }
 
@@ -37,7 +39,7 @@ func CreateEncryptorAndCompressor(rsaPublicKeyPemPkcs1 io.Reader, sink io.Writer
 		return nil, err
 	}
 
-	return &encryptoAndCompressor{encryptedWriter, gzip.NewWriter(encryptedWriter)}, nil
+	return &encryptorAndCompressor{encryptedWriter, gzip.NewWriter(encryptedWriter)}, nil
 }
 
 func DecryptAndDecompress(rsaPrivateKeyPemPkcs1 io.Reader, ciphertextInput io.Reader, plaintextOutput io.Writer) error {

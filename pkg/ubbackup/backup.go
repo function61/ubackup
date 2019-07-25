@@ -25,6 +25,7 @@ func BackupAndStore(
 ) error {
 	logl := logex.Levels(logger)
 
+	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
 		return err
@@ -42,7 +43,10 @@ func BackupAndStore(
 		Target:  target,
 	}
 
-	backupWriter, err := backupfile.CreateEncryptorAndCompressor(bytes.NewBufferString(conf.EncryptionPublicKey), tempFile)
+	// we need to wrap tempFile with nop closer because we need to close backupWriter to finalize
+	// gzip and encryption, but EncryptorCompressor calls close on the underlying writer which
+	// we don't want to do because we still need to hold the file open
+	backupWriter, err := backupfile.CreateEncryptorAndCompressor(bytes.NewBufferString(conf.EncryptionPublicKey), mkNopWriteCloser(tempFile))
 	if err != nil {
 		return err
 	}
@@ -68,5 +72,17 @@ func BackupAndStore(
 		return err
 	}
 
+	return nil
+}
+
+type nopWriterCloser struct {
+	io.Writer
+}
+
+func mkNopWriteCloser(writer io.Writer) io.WriteCloser {
+	return &nopWriterCloser{writer}
+}
+
+func (n *nopWriterCloser) Close() error {
 	return nil
 }
