@@ -160,7 +160,7 @@ The `decrypt` verb of µbackup requires path to your decryption key, reads the e
 backup file from stdin and outputs the decrypted file to stdout.
 
 ```
-./ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
+$ ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
 ```
 
 
