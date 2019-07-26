@@ -139,13 +139,28 @@ Restoring from backup
 Remember to test your backup recovery! Nobody actually wants backups, but everybody wants
 a restore. Without disaster recovery drills you don't know if your backups work.
 
-Download the `.gz.aes` backup file from your S3 bucket.
+Download the `.gz.aes` backup file from your S3 bucket. You can also do it from µbackup CLI
+(just give the service ID the backup was stored under - in this example it's `varasto`):
+
+```
+$ ubackup storage ls varasto
+varasto/2019-07-25 0830Z_joonas_10028.gz.aes
+varasto/2019-07-26 0825Z_joonas_10028.gz.aes
+```
+
+The lines output are "backup ID"s, which is enough info to download the backup:
+
+```
+$ ubackup storage get 'varasto/2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028.gz.aes'
+```
+
+Now you have the encrypted and compressed file - you still have to decrypt it.
 
 The `decrypt` verb of µbackup requires path to your decryption key, reads the encrypted
 backup file from stdin and outputs the decrypted file to stdout.
 
 ```
-./ubackup decrypt backups.key < something.gz.aes > something
+./ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
 ```
 
 
