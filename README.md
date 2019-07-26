@@ -6,7 +6,8 @@ What
 ----
 
 µbackup takes backups from your Docker containers 100 % automatically, properly encrypts
-(more on this in this README) and uploads them to S3.
+(more on this in this README) and uploads them to S3. µbackup is also an embeddable library
+for taking & storing backups from your application.
 
 Stateful containers are gross, but there are use cases where you need them.
 
