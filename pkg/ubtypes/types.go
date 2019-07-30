@@ -14,3 +14,11 @@ type BackupTarget struct {
 	TaskId        string
 	BackupCommand string
 }
+
+// makes a backup struct with "now" as start timestamp
+func BackupForTarget(target BackupTarget) Backup {
+	return Backup{
+		Started: time.Now(),
+		Target:  target,
+	}
+}

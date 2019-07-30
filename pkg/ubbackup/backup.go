@@ -12,13 +12,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"time"
 )
 
 // takes backup from one target, encrypting it and storing it in storage specified in Config
 func BackupAndStore(
 	ctx context.Context,
-	target ubtypes.BackupTarget,
+	backup ubtypes.Backup,
 	conf ubconfig.Config,
 	produce func(io.Writer) error,
 	logger *log.Logger,
@@ -37,11 +36,6 @@ func BackupAndStore(
 		}
 	}()
 	defer tempFile.Close()
-
-	backup := ubtypes.Backup{
-		Started: time.Now(),
-		Target:  target,
-	}
 
 	// we need to wrap tempFile with nop closer because we need to close backupWriter to finalize
 	// gzip and encryption, but EncryptorCompressor calls close on the underlying writer which

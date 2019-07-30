@@ -53,12 +53,12 @@ func manualEntry() *cobra.Command {
 			return err
 		}
 
-		target := ubtypes.BackupTarget{
+		backup := ubtypes.BackupForTarget(ubtypes.BackupTarget{
 			ServiceName: serviceName,
 			TaskId:      taskId,
-		}
+		})
 
-		return ubbackup.BackupAndStore(context.Background(), target, conf.Config, func(backupSink io.Writer) error {
+		return ubbackup.BackupAndStore(context.Background(), backup, conf.Config, func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
 		}, logex.StandardLogger())

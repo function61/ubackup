@@ -5,6 +5,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"log"
 	"os/exec"
@@ -29,7 +30,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 	for _, target := range targets {
 		logl.Info.Printf("backing up %s", target.TaskId)
 
-		if err := ubbackup.BackupAndStore(ctx, target, conf.Config, func(backupSink io.Writer) error {
+		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf.Config, func(backupSink io.Writer) error {
 			// FIXME
 			backupCommand := strings.Split(target.BackupCommand, " ")
 
