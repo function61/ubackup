@@ -66,6 +66,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:f59d6c204396a4b34996f38b7e17bca048c6502c6374f0b996ffffb376027a79"
+  name = "github.com/function61/lambda-alertmanager"
+  packages = [
+    "alertmanager/pkg/alertmanagerclient",
+    "alertmanager/pkg/alertmanagertypes",
+  ]
+  pruneopts = "UT"
+  revision = "c211dc7becb828cb4e321e26dcd82fa1d246153f"
+
+[[projects]]
+  branch = "master"
   digest = "1:fd11acdbd1b926c900e8321c64ba11753ef40330caf96fa76f16574b6716ffc7"
   name = "github.com/function61/promswarmconnect"
   packages = ["pkg/udocker"]
@@ -121,6 +132,8 @@
     "github.com/function61/gokit/pkencryptedstream",
     "github.com/function61/gokit/stopper",
     "github.com/function61/gokit/systemdinstaller",
+    "github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagerclient",
+    "github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagertypes",
     "github.com/function61/promswarmconnect/pkg/udocker",
     "github.com/spf13/cobra",
   ]

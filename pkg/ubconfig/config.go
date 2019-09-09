@@ -19,6 +19,7 @@ type Config struct {
 	AccessKeyId         string `json:"access_key_id"`
 	AccessKeySecret     string `json:"access_key_secret"`
 	EncryptionPublicKey string `json:"encryption_publickey"`
+	AlertmanagerBaseUrl string `json:"alertmanager_baseurl"`
 }
 
 func ReadFromEnvOrFile() (*DockerUseCaseConfig, error) {
@@ -51,6 +52,7 @@ func DefaultConfig(pubkeyFilePath string) *DockerUseCaseConfig {
 			AccessKeyId:         "",
 			AccessKeySecret:     "",
 			EncryptionPublicKey: publicKeyContent,
+			AlertmanagerBaseUrl: "",
 		},
 	}
 }

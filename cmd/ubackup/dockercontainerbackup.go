@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagerclient"
+	"github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagertypes"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -68,5 +71,23 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 
 	logl.Info.Println("completed succesfully")
 
+	if err := alertmanagerDeadMansSwitchCheckin(ctx, conf.Config.AlertmanagerBaseUrl); err != nil {
+		logl.Error.Printf("alertmanagerDeadMansSwitchCheckin failed: %v", err)
+	}
+
 	return nil
+}
+
+func alertmanagerDeadMansSwitchCheckin(ctx context.Context, alertmanagerBaseurl string) error {
+	if alertmanagerBaseurl == "" { // not configured => not an error
+		return nil
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+
+	return alertmanagerclient.New(alertmanagerBaseurl).
+		DeadMansSwitchCheckin(ctx, alertmanagertypes.NewDeadMansSwitchCheckinRequest("µbackup "+hostname, "+25h"))
 }

@@ -202,3 +202,14 @@ implements "ransomware protection".
     ]
 }
 ```
+
+
+How can I be sure it's working?
+-------------------------------
+
+µbackup integrates with [lambda-alertmanager](https://github.com/function61/lambda-alertmanager)
+to provide dead man's switch -like functionality in which µbackup report successfull
+backups to alertmanager. If alertmanager doesn't hear back from µbackup in due time,
+an alert is raised.
+
+Integration with alertmanager is driven by config key `alertmanager_baseurl`.
