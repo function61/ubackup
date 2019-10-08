@@ -113,6 +113,7 @@ func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
 
 		backups = append(backups, StoredBackup{
 			ID:          key,
+			Size:        *item.Size,
 			Timestamp:   timestamp,
 			Description: basename,
 		})

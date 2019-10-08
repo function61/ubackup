@@ -9,6 +9,7 @@ import (
 type StoredBackup struct {
 	ID          string
 	Timestamp   time.Time
+	Size        int64
 	Description string
 }
 
