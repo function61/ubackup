@@ -46,6 +46,7 @@ func backupAllContainers(ctx context.Context, logger *log.Logger) error {
 			}, backupCommand...)
 
 			backupCmd := exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...)
+			backupCmd.Stderr = os.Stderr
 			stdout, err := backupCmd.StdoutPipe()
 			if err != nil {
 				return err
