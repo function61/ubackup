@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
-	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
@@ -23,7 +22,6 @@ const (
 
 type s3BackupStorage struct {
 	conf ubconfig.Config
-	logl *logex.Leveled
 }
 
 func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) error {
@@ -45,8 +43,6 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 		return err
 	}
 
-	s.logl.Info.Printf("Starting to upload %s", s3key)
-
 	if _, err := s3Client.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(s.conf.Bucket),
 		Key:         &s3key,
@@ -55,8 +51,6 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 	}); err != nil {
 		return err
 	}
-
-	s.logl.Info.Println("Upload complete")
 
 	return nil
 }
