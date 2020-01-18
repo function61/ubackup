@@ -9,7 +9,7 @@ Contents:
 
 - [Backing up: Docker containers](#backing-up-docker-containers)
 - [Backing up: traditional applications](#backing-up-traditional-applications)
-- [Security & encryption](#security-encryption)
+- [Security & encryption](#security--encryption)
 - [How to use: as Docker service](#how-to-use-as-docker-service)
 - [How to use: binary installation](#how-to-use-binary-installation)
 - [How to use: part of a script](#how-to-use-part-of-a-script)
@@ -93,7 +93,7 @@ in a [YubiKey](https://www.yubico.com/) (or some other form of HSM).
 How to use: as Docker service
 -----------------------------
 
-First, do the configuration steps from below section "How to use, binary installation".
+First, do the configuration steps from below section "How to use: binary installation".
 
 You only need to do them to create correct `config.json` file. Now, convert that file for
 embedding as ENV variable:
@@ -296,8 +296,8 @@ Backup retention
 This is the great thing about utilizing S3. By default, your backups are stored forever.
 **But** you can configure your S3 bucket to expire your objects in e.g. 21 days.
 
-You could even configure automatic of transfer older backups to Glacier (which are cheaper
-to store but more expensive to retrieve) for backups that have low chance of being used.
+You could even configure automatic transfer of older backups to Glacier (which are cheaper
+to store but more expensive to retrieve) for backups that have a low chance of being needed.
 
 See
 [Object Lifecycle Management](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
@@ -311,4 +311,4 @@ to provide dead man's switch -like functionality in which µbackup reports succe
 backups to alertmanager. If alertmanager doesn't hear back from µbackup in due time,
 an alert is raised.
 
-Integration with alertmanager is driven by config key `alertmanager_baseurl`.
+Integration with alertmanager is driven by config (see example config).
