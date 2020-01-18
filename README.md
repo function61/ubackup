@@ -204,6 +204,19 @@ implements "ransomware protection".
 ```
 
 
+Backup retention
+----------------
+
+This is the great thing about utilizing S3. By default, your backups are stored forever.
+**But** you can configure your S3 bucket to expire your objects in e.g. 21 days.
+
+You could even configure automatic of transfer older backups to Glacier (which are cheaper
+to store but more expensive to retrieve) for backups that have low chance of being used.
+
+See
+[Object Lifecycle Management](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
+
+
 How can I be sure it's working?
 -------------------------------
 
