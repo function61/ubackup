@@ -22,6 +22,12 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		return err
 	}
 
+	if SupportsSettingPriorities {
+		if err := SetLowCpuPriority(); err != nil {
+			return err
+		}
+	}
+
 	if conf.DockerEndpoint != nil {
 		if err := backupAllContainers(ctx, *conf.DockerEndpoint, *conf, logger); err != nil {
 			return err

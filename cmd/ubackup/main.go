@@ -53,6 +53,12 @@ func manualEntry() *cobra.Command {
 			return err
 		}
 
+		if SupportsSettingPriorities {
+			if err := SetLowCpuPriority(); err != nil {
+				return err
+			}
+		}
+
 		backup := ubtypes.BackupForTarget(ubtypes.BackupTarget{
 			ServiceName: serviceName,
 			TaskId:      taskId,
