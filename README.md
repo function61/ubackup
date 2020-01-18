@@ -133,6 +133,20 @@ Run to enable on boot & to start now:
 ```
 
 
+How to use: as a library
+------------------------
+
+Or: using inside your own application.
+
+See [Varasto](https://github.com/function61/varasto) for an example.
+
+You can pretty much take a data stream from anywhere and give it to µbackup for
+compression, encryption and storage. In Varasto we take atomic in-process snapshot of the
+database and hand out the snapshot stream to µbackup.
+
+Varasto even has an UI for displaying/downloading the backups - powered by µbackup library APIs.
+
+
 Restoring from backup
 ---------------------
 
