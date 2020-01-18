@@ -164,8 +164,8 @@ $ ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-0
 ```
 
 
-IAM policy
-----------
+S3 bucket IAM policy
+--------------------
 
 You should minimize attack surface by only allowing the backup program to put stuff into
 the bucket, since read access is not required. If you want the bucket to automatically delete
