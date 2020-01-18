@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 // takes backup from one target, encrypting it and storing it in storage specified in Config
@@ -47,6 +48,10 @@ func BackupAndStore(
 		return err
 	}
 
+	logl.Info.Printf("starting to snapshot %s/%s", backup.Target.ServiceName, backup.Target.TaskId)
+
+	snapshotStartedAt := time.Now()
+
 	if err := produce(backupWriter); err != nil {
 		return err
 	}
@@ -64,9 +69,15 @@ func BackupAndStore(
 		return err
 	}
 
+	logl.Info.Printf("snapshot completed in %s; now starting upload", time.Since(snapshotStartedAt))
+
+	uploadStartedAt := time.Now()
+
 	if err := storage.Put(backup, tempFile); err != nil {
 		return err
 	}
+
+	logl.Info.Printf("upload completed in %s", time.Since(uploadStartedAt))
 
 	return nil
 }

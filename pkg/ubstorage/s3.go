@@ -45,8 +45,6 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 		return err
 	}
 
-	s.logl.Info.Printf("Starting to upload %s", s3key)
-
 	if _, err := s3Client.PutObject(&s3.PutObjectInput{
 		Bucket:      aws.String(s.conf.Bucket),
 		Key:         &s3key,
@@ -55,8 +53,6 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 	}); err != nil {
 		return err
 	}
-
-	s.logl.Info.Println("Upload complete")
 
 	return nil
 }
