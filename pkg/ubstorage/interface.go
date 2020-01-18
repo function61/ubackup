@@ -14,7 +14,7 @@ type StoredBackup struct {
 }
 
 type Storage interface {
-	List(serviceId string) ([]StoredBackup, error)
 	Put(backup ubtypes.Backup, content io.ReadSeeker) error
+	List(serviceId string) ([]StoredBackup, error)
 	Get(id string) (io.ReadCloser, error)
 }
