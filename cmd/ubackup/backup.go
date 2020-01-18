@@ -35,6 +35,8 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	}
 
 	for _, staticTarget := range conf.StaticTargets {
+		staticTarget := staticTarget // pin
+
 		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(staticTarget), *conf, func(backupSink io.Writer) error {
 			return copyCommandStdout(exec.Command(staticTarget.BackupCommand[0], staticTarget.BackupCommand[1:]...), backupSink)
 		}, logger); err != nil {

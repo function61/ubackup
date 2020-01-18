@@ -85,8 +85,5 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 		StaticTargets: staticTargets,
 	}
 
-	if kitchenSink {
-	}
-
 	return conf
 }

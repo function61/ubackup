@@ -91,7 +91,9 @@ func printDefaultConfigEntry() *cobra.Command {
 		Short: "Shows you a default config file format as an example",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink))
+			if err := jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)); err != nil {
+				panic(err)
+			}
 		},
 	}
 

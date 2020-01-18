@@ -27,6 +27,8 @@ func backupAllContainers(
 	}
 
 	for _, target := range targets {
+		target := target // pin
+
 		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf, func(backupSink io.Writer) error {
 			logl.Debug.Printf("backup command: %v", target.BackupCommand)
 
