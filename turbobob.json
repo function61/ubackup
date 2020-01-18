@@ -39,6 +39,7 @@
 	"os_arches": {
 		"linux-amd64": true,
 		"linux-arm": true,
+		"darwin-amd64": true,
 		"windows-amd64": true
 	}
 }
