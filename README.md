@@ -217,7 +217,8 @@ $ ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-0
 Example configuration file
 --------------------------
 
-Run `print-default-config` with `--kitchensink`:
+Run `print-default-config` with `--kitchensink` (= show all the possible configuration
+options), it will look something like this:
 
 ```
 $ ubackup print-default-config --kitchensink
@@ -240,6 +241,9 @@ $ ubackup print-default-config --kitchensink
             "access_key_id": "AKIAUZHTE3U35WCD5...",
             "access_key_secret": "wXQJhB..."
         }
+    },
+    "alertmanager": {
+        "baseurl": "https://example.com/url-to-my/alertmanager"
     }
 }
 

@@ -58,6 +58,8 @@ func DefaultConfig(pubkeyFilePath string, kitchenSink bool) *Config {
 
 	staticTargets := []ubtypes.BackupTarget{}
 
+	var alertManager *AlertManagerConfig
+
 	if kitchenSink {
 		if publicKeyContent == "" {
 			publicKeyContent = `-----BEGIN RSA PUBLIC KEY-----
@@ -69,9 +71,13 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 			ServiceName:   "someapp",
 			BackupCommand: []string{"cat", "/var/lib/someapp/file.log"},
 		})
+
+		alertManager = &AlertManagerConfig{
+			BaseUrl: "https://example.com/url-to-my/alertmanager",
+		}
 	}
 
-	conf := &Config{
+	return &Config{
 		DockerEndpoint:      &dockerEndpoint,
 		EncryptionPublicKey: publicKeyContent,
 		Storage: StorageConfig{
@@ -83,7 +89,6 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 			},
 		},
 		StaticTargets: staticTargets,
+		AlertManager:  alertManager,
 	}
-
-	return conf
 }
