@@ -17,7 +17,7 @@ func storageEntry() *cobra.Command {
 			return err
 		}
 
-		storage, err := ubstorage.StorageFromConfig(conf.Config, logex.StandardLogger())
+		storage, err := ubstorage.StorageFromConfig(conf.Storage, logex.StandardLogger())
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func storageEntry() *cobra.Command {
 			return err
 		}
 
-		storage, err := ubstorage.StorageFromConfig(conf.Config, logex.StandardLogger())
+		storage, err := ubstorage.StorageFromConfig(conf.Storage, logex.StandardLogger())
 		if err != nil {
 			return err
 		}

@@ -24,6 +24,8 @@ func BackupAndStore(
 ) error {
 	logl := logex.Levels(logger)
 
+	logl.Info.Printf("backing up %s (%s)", backup.Target.ServiceName, backup.Target.TaskId)
+
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {
@@ -57,7 +59,7 @@ func BackupAndStore(
 		return err
 	}
 
-	storage, err := ubstorage.StorageFromConfig(conf, logger)
+	storage, err := ubstorage.StorageFromConfig(conf.Storage, logger)
 	if err != nil {
 		return err
 	}

@@ -10,9 +10,9 @@ type Backup struct {
 }
 
 type BackupTarget struct {
-	ServiceName   string
-	TaskId        string
-	BackupCommand string
+	ServiceName   string   `json:"service_name"`
+	BackupCommand []string `json:"backup_command"`
+	TaskId        string   `json:"task_id,omitempty"`
 }
 
 // makes a backup struct with "now" as start timestamp

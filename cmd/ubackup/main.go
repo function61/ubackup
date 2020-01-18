@@ -26,7 +26,7 @@ func main() {
 		Short: "Takes a backup now",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := backupAllContainers(context.Background(), logex.StandardLogger()); err != nil {
+			if err := runBackup(context.Background(), logex.StandardLogger()); err != nil {
 				panic(err)
 			}
 		},
@@ -58,7 +58,7 @@ func manualEntry() *cobra.Command {
 			TaskId:      taskId,
 		})
 
-		return ubbackup.BackupAndStore(context.Background(), backup, conf.Config, func(backupSink io.Writer) error {
+		return ubbackup.BackupAndStore(context.Background(), backup, *conf, func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
 		}, logex.StandardLogger())
@@ -77,6 +77,7 @@ func manualEntry() *cobra.Command {
 }
 
 func printDefaultConfigEntry() *cobra.Command {
+	kitchenSink := false
 	pubkeyFilePath := ""
 
 	cmd := &cobra.Command{
@@ -84,11 +85,12 @@ func printDefaultConfigEntry() *cobra.Command {
 		Short: "Shows you a default config file format as an example",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath))
+			jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink))
 		},
 	}
 
 	cmd.Flags().StringVarP(&pubkeyFilePath, "pubkey-file", "p", pubkeyFilePath, "Path to public key file")
+	cmd.Flags().BoolVarP(&kitchenSink, "kitchensink", "", kitchenSink, "All the possible configuration option examples")
 
 	return cmd
 }

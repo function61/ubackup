@@ -5,25 +5,35 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/ubackup/pkg/ubtypes"
 	"io/ioutil"
 )
 
-type DockerUseCaseConfig struct {
-	DockerEndpoint string `json:"docker_endpoint"`
-	Config         Config `json:"config"`
-}
-
 type Config struct {
-	Bucket              string `json:"bucket"`
-	BucketRegion        string `json:"bucket_region"`
-	AccessKeyId         string `json:"access_key_id"`
-	AccessKeySecret     string `json:"access_key_secret"`
-	EncryptionPublicKey string `json:"encryption_publickey"`
-	AlertmanagerBaseUrl string `json:"alertmanager_baseurl"`
+	EncryptionPublicKey string                 `json:"encryption_publickey"`
+	DockerEndpoint      *string                `json:"docker_endpoint,omitempty"`
+	StaticTargets       []ubtypes.BackupTarget `json:"static_targets"`
+	Storage             StorageConfig          `json:"storage"`
+	AlertManager        *AlertManagerConfig    `json:"alertmanager,omitempty"`
 }
 
-func ReadFromEnvOrFile() (*DockerUseCaseConfig, error) {
-	conf := &DockerUseCaseConfig{}
+type StorageConfig struct {
+	S3 *StorageS3Config `json:"s3"`
+}
+
+type StorageS3Config struct {
+	Bucket          string `json:"bucket"`
+	BucketRegion    string `json:"bucket_region"`
+	AccessKeyId     string `json:"access_key_id"`
+	AccessKeySecret string `json:"access_key_secret"`
+}
+
+type AlertManagerConfig struct {
+	BaseUrl string `json:"baseurl"`
+}
+
+func ReadFromEnvOrFile() (*Config, error) {
+	conf := &Config{}
 	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
 	if err == nil { // FIXME: this swallows invalid base64 syntax error
 		return conf, jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true)
@@ -32,7 +42,7 @@ func ReadFromEnvOrFile() (*DockerUseCaseConfig, error) {
 	}
 }
 
-func DefaultConfig(pubkeyFilePath string) *DockerUseCaseConfig {
+func DefaultConfig(pubkeyFilePath string, kitchenSink bool) *Config {
 	publicKeyContent := ""
 
 	if pubkeyFilePath != "" {
@@ -44,15 +54,39 @@ func DefaultConfig(pubkeyFilePath string) *DockerUseCaseConfig {
 		publicKeyContent = string(content)
 	}
 
-	return &DockerUseCaseConfig{
-		DockerEndpoint: "unix:///var/run/docker.sock",
-		Config: Config{
-			Bucket:              "mybucket",
-			BucketRegion:        endpoints.UsEast1RegionID,
-			AccessKeyId:         "",
-			AccessKeySecret:     "",
-			EncryptionPublicKey: publicKeyContent,
-			AlertmanagerBaseUrl: "",
-		},
+	dockerEndpoint := "unix:///var/run/docker.sock"
+
+	staticTargets := []ubtypes.BackupTarget{}
+
+	if kitchenSink {
+		if publicKeyContent == "" {
+			publicKeyContent = `-----BEGIN RSA PUBLIC KEY-----
+MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
+-----END RSA PUBLIC KEY-----`
+		}
+
+		staticTargets = append(staticTargets, ubtypes.BackupTarget{
+			ServiceName:   "someapp",
+			BackupCommand: []string{"cat", "/var/lib/someapp/file.log"},
+		})
 	}
+
+	conf := &Config{
+		DockerEndpoint:      &dockerEndpoint,
+		EncryptionPublicKey: publicKeyContent,
+		Storage: StorageConfig{
+			S3: &StorageS3Config{
+				Bucket:          "mybucket",
+				BucketRegion:    endpoints.UsEast1RegionID,
+				AccessKeyId:     "AKIAUZHTE3U35WCD5...",
+				AccessKeySecret: "wXQJhB...",
+			},
+		},
+		StaticTargets: staticTargets,
+	}
+
+	if kitchenSink {
+	}
+
+	return conf
 }

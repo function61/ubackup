@@ -8,6 +8,7 @@ import (
 	"github.com/function61/promswarmconnect/pkg/udocker"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -15,7 +16,7 @@ const (
 )
 
 // returns containers that have ENV var "BACKUP_COMMAND" defined
-func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
+func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("udocker.Client: %v", err)
@@ -54,10 +55,13 @@ func discoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtype
 				serviceName = "none"
 			}
 
+			// FIXME
+			backupCommandParsed := strings.Split(value, " ")
+
 			targets = append(targets, ubtypes.BackupTarget{
 				ServiceName:   serviceName,
 				TaskId:        inspected.Id[0:12], // Docker CLI truncates ids to this long. using same here to shorten filenames
-				BackupCommand: value,
+				BackupCommand: backupCommandParsed,
 			})
 		}
 	}

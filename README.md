@@ -2,14 +2,32 @@
 [![Download](https://img.shields.io/bintray/v/function61/dl/ubackup.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/ubackup/_latestVersion#files)
 [![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
-What
-----
+µbackup is a program/library/Docker image for taking backups of your Docker containers (or
+traditional applications) 100 % automatically, properly encrypting and uploading them to S3.
 
-µbackup takes backups from your Docker containers 100 % automatically, properly encrypts
-(more on this in this README) and uploads them to S3. µbackup is also an embeddable library
-for taking & storing backups from your application.
+Contents:
 
-Stateful containers are gross, but there are use cases where you need them.
+- [Backing up: Docker containers](#backing-up-docker-containers)
+- [Backing up: traditional applications](#backing-up-traditional-applications)
+- [Security & encryption](#security-encryption)
+- [How to use: as Docker service](#how-to-use-as-docker-service)
+- [How to use: binary installation](#how-to-use-binary-installation)
+- [How to use: part of a script](#how-to-use-part-of-a-script)
+- [How to use: as a library](#how-to-use-as-a-library)
+- [Restoring from backup](#restoring-from-backup)
+- [Example configuration file](#example-configuration-file)
+- [S3 bucket IAM policy](#s3-bucket-iam-policy)
+- [Backup retention](#backup-retention)
+- [How can I be sure it's working?](#how-can-i-be-sure-it-s-working)
+
+
+Backing up: Docker containers
+-----------------------------
+
+(You need to run the µbackup Docker service, or if you run it as an application on your
+Docker host, configure the Docker integration via µbackup config)
+
+µbackup takes backups from your stateful Docker containers 100 % automatically. Here's how:
 
 ```
 +------------+     +-----------------------------+      +------------------------------+      +--------------+
@@ -48,6 +66,16 @@ than having to write temporary files.
 You don't have to compress the file inside the container, since that is taken care of for you.
 
 
+Backing up: traditional applications
+------------------------------------
+
+First look at the process for how Docker containers are backed up. Traditional applications
+follow the same principle where µbackup just backs up the stdout stream of a command it
+executes (just not inside a container this time).
+
+Look for the "static targets" configuration keys in the example configuration file.
+
+
 Security & encryption
 ---------------------
 
@@ -62,7 +90,7 @@ If you are serious about security, with this design you could even store the pri
 in a [YubiKey](https://www.yubico.com/) (or some other form of HSM).
 
 
-How to use, as Docker service
+How to use: as Docker service
 -----------------------------
 
 First, do the configuration steps from below section "How to use, binary installation".
@@ -88,7 +116,7 @@ $ docker service create --name ubackup --mode global \
 Note: `VERSION` is the same as you would find for the binary installation.
 
 
-How to use, binary installation
+How to use: binary installation
 -------------------------------
 
 Download:
@@ -183,6 +211,38 @@ backup file from stdin and outputs the decrypted file to stdout.
 
 ```
 $ ubackup decrypt backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
+```
+
+
+Example configuration file
+--------------------------
+
+Run `print-default-config` with `--kitchensink`:
+
+```
+$ ubackup print-default-config --kitchensink
+{
+    "encryption_publickey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...\n-----END RSA PUBLIC KEY-----",
+    "docker_endpoint": "unix:///var/run/docker.sock",
+    "static_targets": [
+        {
+            "service_name": "someapp",
+            "backup_command": [
+                "cat",
+                "/var/lib/someapp/file.log"
+            ]
+        }
+    ],
+    "storage": {
+        "s3": {
+            "bucket": "mybucket",
+            "bucket_region": "us-east-1",
+            "access_key_id": "AKIAUZHTE3U35WCD5...",
+            "access_key_secret": "wXQJhB..."
+        }
+    }
+}
+
 ```
 
 

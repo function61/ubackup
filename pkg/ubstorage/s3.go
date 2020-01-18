@@ -22,7 +22,7 @@ const (
 )
 
 type s3BackupStorage struct {
-	conf ubconfig.Config
+	conf ubconfig.StorageS3Config
 	logl *logex.Leveled
 }
 
@@ -40,7 +40,7 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 		hostname,
 		backup.Target.TaskId)
 
-	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
+	s3Client, err := s.s3Client()
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 }
 
 func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
-	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
+	s3Client, err := s.s3Client()
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
 var parseTimestampRe = regexp.MustCompile("^[^Z]+Z")
 
 func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
-	s3Client, err := s3facade.Client(s.conf.AccessKeyId, s.conf.AccessKeySecret, s.conf.BucketRegion)
+	s3Client, err := s.s3Client()
 	if err != nil {
 		return nil, err
 	}
@@ -122,4 +122,11 @@ func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
 	sort.Slice(backups, func(i, j int) bool { return backups[i].Timestamp.Before(backups[j].Timestamp) })
 
 	return backups, nil
+}
+
+func (s *s3BackupStorage) s3Client() (*s3.S3, error) {
+	return s3facade.Client(
+		s.conf.AccessKeyId,
+		s.conf.AccessKeySecret,
+		s.conf.BucketRegion)
 }

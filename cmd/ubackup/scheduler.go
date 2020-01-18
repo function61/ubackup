@@ -42,7 +42,7 @@ func runScheduler(ctx context.Context, logger *log.Logger, stop *stopper.Stopper
 		case <-time.After(next.Sub(now)):
 			logl.Info.Println("it's backup time!")
 
-			if err := backupAllContainers(ctx, logger); err != nil {
+			if err := runBackup(ctx, logger); err != nil {
 				logl.Error.Printf("error: %v", err)
 			} else {
 				logl.Info.Println("backup succeeded :)")
