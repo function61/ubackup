@@ -133,6 +133,14 @@ Run to enable on boot & to start now:
 ```
 
 
+How to use: part of a script
+----------------------------
+
+In your script, you can call `$ ubackup manual-backup ...`.
+
+Call `manual-backup` with `--help` to get options you need to specify.
+
+
 How to use: as a library
 ------------------------
 
