@@ -3,6 +3,7 @@ package ubbackup
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/function61/ubackup/pkg/ubconfig"
@@ -53,7 +54,7 @@ func BackupAndStore(
 	snapshotStartedAt := time.Now()
 
 	if err := produce(backupWriter); err != nil {
-		return err
+		return fmt.Errorf("snapshot failed (in %s): %v", time.Since(snapshotStartedAt), err)
 	}
 
 	if err := backupWriter.Close(); err != nil {
@@ -69,7 +70,7 @@ func BackupAndStore(
 		return err
 	}
 
-	logl.Info.Printf("snapshot completed in %s; now starting upload", time.Since(snapshotStartedAt))
+	logl.Info.Printf("snapshot completed in %s; starting upload", time.Since(snapshotStartedAt))
 
 	uploadStartedAt := time.Now()
 
