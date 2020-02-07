@@ -18,7 +18,7 @@ Contents:
 - [Example configuration file](#example-configuration-file)
 - [S3 bucket IAM policy](#s3-bucket-iam-policy)
 - [Backup retention](#backup-retention)
-- [How can I be sure it's working?](#how-can-i-be-sure-it-s-working)
+- [How can I be sure it keeps working?](#how-can-i-be-sure-it-keeps-working)
 
 
 Backing up: Docker containers
@@ -303,12 +303,15 @@ See
 [Object Lifecycle Management](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
 
 
-How can I be sure it's working?
--------------------------------
+How can I be sure it keeps working?
+-----------------------------------
 
 µbackup integrates with [lambda-alertmanager](https://github.com/function61/lambda-alertmanager)
-to provide dead man's switch -like functionality in which µbackup reports successfull
+to provide "dead man's switch" -like functionality in which µbackup reports successfull
 backups to alertmanager. If alertmanager doesn't hear back from µbackup in due time,
 an alert is raised.
+
+This makes it so that even if µbackup wouldn't be able to report to you that it's no ok,
+an external component will signal you it's not ok because it didn't receive a "check-in".
 
 Integration with alertmanager is driven by config (see example config).
