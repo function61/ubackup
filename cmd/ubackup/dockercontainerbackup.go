@@ -11,40 +11,25 @@ import (
 	"os/exec"
 )
 
-func backupAllContainers(
+func backupOneContainer(
 	ctx context.Context,
-	dockerEndpoint string,
+	target ubtypes.BackupTarget,
 	conf ubconfig.Config,
 	logger *log.Logger,
 ) error {
 	logl := logex.Levels(logger)
 
-	logl.Info.Println("starting discovery")
+	return ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf, func(backupSink io.Writer) error {
+		logl.Debug.Printf("backup command: %v", target.BackupCommand)
 
-	targets, err := dockerDiscoverBackupTargets(ctx, dockerEndpoint)
-	if err != nil {
-		return err
-	}
+		dockerExecCmd := append([]string{
+			"docker",
+			"exec",
+			target.TaskId,
+		}, target.BackupCommand...)
 
-	for _, target := range targets {
-		target := target // pin
-
-		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf, func(backupSink io.Writer) error {
-			logl.Debug.Printf("backup command: %v", target.BackupCommand)
-
-			dockerExecCmd := append([]string{
-				"docker",
-				"exec",
-				target.TaskId,
-			}, target.BackupCommand...)
-
-			return copyCommandStdout(
-				exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...),
-				backupSink)
-		}, logger); err != nil {
-			return err
-		}
-	}
-
-	return nil
+		return copyCommandStdout(
+			exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...),
+			backupSink)
+	}, logger)
 }

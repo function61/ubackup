@@ -66,14 +66,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:af420f6617d038364add50fd9ac255c1de00534c5f2ae231baad9b934641303f"
+  digest = "1:9dd8d9589c3d6c611bcaf14feef12e25c345bd49bfcfa5c899efe1f076d4444e"
   name = "github.com/function61/lambda-alertmanager"
   packages = [
     "alertmanager/pkg/alertmanagerclient",
     "alertmanager/pkg/alertmanagertypes",
   ]
   pruneopts = "UT"
-  revision = "5e1cc24f386eb6aba6707a2256288b83e66a3914"
+  revision = "0996e184520ad4af8efb8204d6a2830fc1588e99"
 
 [[projects]]
   branch = "master"

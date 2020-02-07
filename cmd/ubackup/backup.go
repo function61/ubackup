@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagerclient"
 	"github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagertypes"
@@ -17,9 +19,23 @@ import (
 func runBackup(ctx context.Context, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
+	alertSubjects, err := newAlertSubjects()
+	if err != nil {
+		return err
+	}
+
 	conf, err := ubconfig.ReadFromEnvOrFile()
 	if err != nil {
 		return err
+	}
+
+	var alertManagerClient *alertmanagerclient.Client
+	if conf.AlertManager != nil {
+		if conf.AlertManager.BaseUrl == "" {
+			return errors.New("AlertManager.BaseUrl empty")
+		}
+
+		alertManagerClient = alertmanagerclient.New(conf.AlertManager.BaseUrl)
 	}
 
 	if SupportsSettingPriorities {
@@ -28,9 +44,36 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 	}
 
+	failedBackupCount := 0
+
+	handleOneFailure := func(target ubtypes.BackupTarget, err error) {
+		failedBackupCount++
+
+		logl.Error.Printf("%s: %v", target.ServiceName, err)
+
+		alert := alertmanagertypes.NewAlert(
+			alertSubjects.ServiceBackupFailed(target.ServiceName),
+			err.Error())
+
+		if alertManagerClient != nil {
+			if err := alertManagerClient.Alert(ctx, alert); err != nil {
+				logl.Error.Println(err.Error())
+			}
+		}
+	}
+
 	if conf.DockerEndpoint != nil {
-		if err := backupAllContainers(ctx, *conf.DockerEndpoint, *conf, logger); err != nil {
+		logl.Debug.Println("starting discovery")
+
+		containerTargets, err := dockerDiscoverBackupTargets(ctx, *conf.DockerEndpoint)
+		if err != nil {
 			return err
+		}
+
+		for _, containerTarget := range containerTargets {
+			if err := backupOneContainer(ctx, containerTarget, *conf, logger); err != nil {
+				handleOneFailure(containerTarget, err)
+			}
 		}
 	}
 
@@ -40,34 +83,30 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(staticTarget), *conf, func(backupSink io.Writer) error {
 			return copyCommandStdout(exec.Command(staticTarget.BackupCommand[0], staticTarget.BackupCommand[1:]...), backupSink)
 		}, logger); err != nil {
-			return err
+			handleOneFailure(staticTarget, err)
 		}
 	}
 
-	if conf.AlertManager != nil {
+	if alertManagerClient != nil && failedBackupCount == 0 {
 		// this dead man's switch semantics are "all backups for this hostname succeeded"
-		if err := alertmanagerDeadMansSwitchCheckin(ctx, conf.AlertManager.BaseUrl); err != nil {
-			logl.Error.Printf("alertmanagerDeadMansSwitchCheckin failed: %v", err)
+		checkin := alertmanagertypes.NewDeadMansSwitchCheckinRequest(
+			alertSubjects.DeadMansSwitchKey(),
+			"+25h")
+
+		if err := alertManagerClient.DeadMansSwitchCheckin(ctx, checkin); err != nil {
+			wrappedErr := fmt.Errorf("DeadMansSwitchCheckin: %v", err)
+			logl.Error.Println(wrappedErr.Error())
+			return wrappedErr
 		}
+	}
+
+	if failedBackupCount > 0 {
+		return errors.New("some (or all) backups failed")
 	}
 
 	logl.Info.Println("completed succesfully")
 
 	return nil
-}
-
-func alertmanagerDeadMansSwitchCheckin(ctx context.Context, alertmanagerBaseurl string) error {
-	if alertmanagerBaseurl == "" { // not configured => not an error
-		return nil
-	}
-
-	hostname, err := os.Hostname()
-	if err != nil {
-		return err
-	}
-
-	return alertmanagerclient.New(alertmanagerBaseurl).
-		DeadMansSwitchCheckin(ctx, alertmanagertypes.NewDeadMansSwitchCheckinRequest("µbackup "+hostname, "+25h"))
 }
 
 func copyCommandStdout(cmd *exec.Cmd, backupSink io.Writer) error {
@@ -90,4 +129,25 @@ func copyCommandStdout(cmd *exec.Cmd, backupSink io.Writer) error {
 	}
 
 	return nil
+}
+
+type alertSubjectsFactory struct {
+	hostname string
+}
+
+func newAlertSubjects() (*alertSubjectsFactory, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+
+	return &alertSubjectsFactory{hostname}, nil
+}
+
+func (a *alertSubjectsFactory) ServiceBackupFailed(serviceName string) string {
+	return a.DeadMansSwitchKey() + ": " + serviceName
+}
+
+func (a *alertSubjectsFactory) DeadMansSwitchKey() string {
+	return "µbackup " + a.hostname
 }
