@@ -5,6 +5,8 @@
 µbackup is a program/library/Docker image for taking backups of your Docker containers (or
 traditional applications) 100 % automatically, properly encrypting and uploading them to S3.
 
+![](docs/diagram.png)
+
 Contents:
 
 - [Backing up: Docker containers](#backing-up-docker-containers)
@@ -311,7 +313,7 @@ to provide "dead man's switch" -like functionality in which µbackup reports suc
 backups to alertmanager. If alertmanager doesn't hear back from µbackup in due time,
 an alert is raised.
 
-This makes it so that even if µbackup wouldn't be able to report to you that it's no ok,
+This makes it so that even if µbackup wouldn't be able to report to you that it's not ok,
 an external component will signal you it's not ok because it didn't receive a "check-in".
 
 Integration with alertmanager is driven by config (see example config).

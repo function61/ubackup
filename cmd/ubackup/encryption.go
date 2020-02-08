@@ -94,7 +94,7 @@ func decryptionKeyGenerateEntry() *cobra.Command {
 func decryptionKeyToEncryptionKeyEntry() *cobra.Command {
 	return &cobra.Command{
 		Use:   "decryption-key-to-encryption-key",
-		Short: "Prints encryption key of decryption key",
+		Short: "Prints encryption key (= public key) of decryption key (= private key)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := decryptionKeyToEncryptionKey(os.Stdin, os.Stdout); err != nil {
