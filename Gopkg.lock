@@ -46,9 +46,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d7dc6d28cf9d7f16a3c150bc0e451d75aceaf50f934e70cc2a98073cd2d62f5f"
+  digest = "1:b3bd29982723fc6612acffcd12af7b0400221fb31d832d63bef4f8f55c375143"
   name = "github.com/function61/gokit"
   packages = [
+    "atomicfilewrite",
     "aws/s3facade",
     "cryptoutil",
     "dynversion",
@@ -58,11 +59,10 @@
     "logex",
     "ossignal",
     "pkencryptedstream",
-    "stopper",
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "36f64b533f39f1feaf116566e1cae0c9ae8dfe57"
+  revision = "df1bf12a569ae75f2eecf81342f179f33c294e9e"
 
 [[projects]]
   branch = "master"
@@ -130,7 +130,6 @@
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/pkencryptedstream",
-    "github.com/function61/gokit/stopper",
     "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagerclient",
     "github.com/function61/lambda-alertmanager/alertmanager/pkg/alertmanagertypes",

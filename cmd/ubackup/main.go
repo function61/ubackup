@@ -6,11 +6,13 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/ossignal"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/spf13/cobra"
 	"io"
+	"log"
 	"os"
 )
 
@@ -26,7 +28,11 @@ func main() {
 		Short: "Takes a backup now",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := runBackup(context.Background(), logex.StandardLogger()); err != nil {
+			rootLogger := logex.StandardLogger()
+
+			ctx := ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger))
+
+			if err := runBackup(ctx, rootLogger); err != nil {
 				panic(err)
 			}
 		},
@@ -47,7 +53,7 @@ func main() {
 }
 
 func manualEntry() *cobra.Command {
-	manual := func(serviceName string, taskId string) error {
+	manual := func(ctx context.Context, serviceName string, taskId string, logger *log.Logger) error {
 		conf, err := ubconfig.ReadFromEnvOrFile()
 		if err != nil {
 			return err
@@ -64,10 +70,10 @@ func manualEntry() *cobra.Command {
 			TaskId:      taskId,
 		})
 
-		return ubbackup.BackupAndStore(context.Background(), backup, *conf, func(backupSink io.Writer) error {
+		return ubbackup.BackupAndStore(ctx, backup, *conf, func(backupSink io.Writer) error {
 			_, err := io.Copy(backupSink, os.Stdin)
 			return err
-		}, logex.StandardLogger())
+		}, logger)
 	}
 
 	return &cobra.Command{
@@ -75,7 +81,11 @@ func manualEntry() *cobra.Command {
 		Short: "Upload one manual backup",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := manual(args[0], args[1]); err != nil {
+			rootLogger := logex.StandardLogger()
+
+			ctx := ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger))
+
+			if err := manual(ctx, args[0], args[1], rootLogger); err != nil {
 				panic(err)
 			}
 		},
