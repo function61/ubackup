@@ -310,10 +310,12 @@ See
 How can I be sure it keeps working?
 -----------------------------------
 
-µbackup integrates with [lambda-alertmanager](https://github.com/function61/lambda-alertmanager)
-to provide "dead man's switch" -like functionality in which µbackup reports successfull
-backups to alertmanager. If alertmanager doesn't hear back from µbackup in due time,
-an alert is raised.
+µbackup optionally integrates with
+[lambda-alertmanager](https://github.com/function61/lambda-alertmanager) to provide
+"dead man's switch" -like functionality in which µbackup reports successfull backups to
+alertmanager. If alertmanager doesn't hear back from µbackup in due time, an alert is raised.
+
+![Diagram on dead man's switch](docs/dead-mans-switch.png)
 
 This makes it so that even if µbackup wouldn't be able to report to you that it's not ok,
 an external component will signal you it's not ok because it didn't receive a "check-in".
