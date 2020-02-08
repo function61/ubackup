@@ -5,7 +5,7 @@
 µbackup is a program/library/Docker image for taking backups of your Docker containers (or
 traditional applications) 100 % automatically, properly encrypting and uploading them to S3.
 
-![](docs/diagram.png)
+![Diagram of µbackup](docs/diagram.png)
 
 Contents:
 
@@ -182,7 +182,9 @@ You can pretty much take a data stream from anywhere and give it to µbackup for
 compression, encryption and storage. In Varasto we take atomic in-process snapshot of the
 database and hand out the snapshot stream to µbackup.
 
-Varasto even has an UI for displaying/downloading the backups - powered by µbackup library APIs.
+Varasto even has an UI for displaying/downloading the backups - powered by µbackup library APIs:
+
+![Usage as a library screenshot](docs/usage-as-a-library.png)
 
 
 Restoring from backup
