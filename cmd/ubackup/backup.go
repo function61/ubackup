@@ -44,10 +44,11 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 	}
 
-	failedBackupCount := 0
+	failedBackups := 0
+	failedBackupErrorAlerts := 0
 
 	handleOneFailure := func(target ubtypes.BackupTarget, err error) {
-		failedBackupCount++
+		failedBackups++
 
 		logl.Error.Printf("%s: %v", target.ServiceName, err)
 
@@ -58,6 +59,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		if alertManagerClient != nil {
 			if err := alertManagerClient.Alert(ctx, alert); err != nil {
 				logl.Error.Println(err.Error())
+				failedBackupErrorAlerts++
 			}
 		}
 	}
@@ -87,7 +89,10 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 	}
 
-	if alertManagerClient != nil && failedBackupCount == 0 {
+	// only checkin the dead man's switch if we didn't have any problems reporting individual
+	// backup jobs as failed. individual job failing but being able raise an alert is not
+	// an error in the ubackup process itself, and therefore we don't want the switch to activate
+	if alertManagerClient != nil && failedBackupErrorAlerts == 0 {
 		// this dead man's switch semantics are "all backups for this hostname succeeded"
 		checkin := alertmanagertypes.NewDeadMansSwitchCheckinRequest(
 			alertSubjects.DeadMansSwitchKey(),
@@ -100,7 +105,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 	}
 
-	if failedBackupCount > 0 {
+	if failedBackups > 0 {
 		return errors.New("some (or all) backups failed")
 	}
 
