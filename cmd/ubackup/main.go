@@ -54,7 +54,7 @@ func main() {
 }
 
 func manualEntry() *cobra.Command {
-	manual := func(ctx context.Context, serviceName string, taskId string, logger *log.Logger) error {
+	manual := func(ctx context.Context, serviceName string, taskId string, backupStream io.Reader, logger *log.Logger) error {
 		conf, err := ubconfig.ReadFromEnvOrFile()
 		if err != nil {
 			return err
@@ -72,7 +72,7 @@ func manualEntry() *cobra.Command {
 		})
 
 		return ubbackup.BackupAndStore(ctx, backup, *conf, func(backupSink io.Writer) error {
-			_, err := io.Copy(backupSink, os.Stdin)
+			_, err := io.Copy(backupSink, backupStream)
 			return err
 		}, logger)
 	}
@@ -86,7 +86,7 @@ func manualEntry() *cobra.Command {
 
 			ctx := ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger))
 
-			if err := manual(ctx, args[0], args[1], rootLogger); err != nil {
+			if err := manual(ctx, args[0], args[1], os.Stdin, rootLogger); err != nil {
 				panic(err)
 			}
 		},

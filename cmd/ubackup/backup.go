@@ -53,12 +53,11 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		logl.Error.Printf("%s: %v", target.ServiceName, err)
 
 		// raise an alert
-
-		alert := alertmanagertypes.NewAlert(
-			alertSubjects.ServiceBackupFailed(target.ServiceName),
-			err.Error())
-
 		if alertManagerClient != nil {
+			alert := alertmanagertypes.NewAlert(
+				alertSubjects.ServiceBackupFailed(target.ServiceName),
+				err.Error())
+
 			if err := alertManagerClient.Alert(ctx, alert); err != nil {
 				logl.Error.Println(err.Error())
 				failedBackupErrorAlerts++
