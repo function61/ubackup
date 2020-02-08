@@ -24,9 +24,9 @@ func BackupAndStore(
 	produce func(io.Writer) error,
 	logger *log.Logger,
 ) error {
-	logl := logex.Levels(logger)
+	logl := logex.Levels(logex.Prefix(backup.Target.ServiceName, logger))
 
-	logl.Info.Printf("backing up %s (%s)", backup.Target.ServiceName, backup.Target.TaskId)
+	logl.Info.Printf("starting (%s)", backup.Target.TaskId)
 
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := ioutil.TempFile("", "ubackup")
@@ -49,8 +49,6 @@ func BackupAndStore(
 		return err
 	}
 
-	logl.Info.Printf("starting to snapshot %s/%s", backup.Target.ServiceName, backup.Target.TaskId)
-
 	snapshotStartedAt := time.Now()
 
 	if err := produce(backupWriter); err != nil {
@@ -70,7 +68,7 @@ func BackupAndStore(
 		return err
 	}
 
-	logl.Info.Printf("snapshot completed in %s; starting upload", time.Since(snapshotStartedAt))
+	logl.Debug.Printf("snapshot completed in %s; starting upload", time.Since(snapshotStartedAt))
 
 	uploadStartedAt := time.Now()
 
@@ -78,7 +76,7 @@ func BackupAndStore(
 		return err
 	}
 
-	logl.Info.Printf("upload completed in %s", time.Since(uploadStartedAt))
+	logl.Debug.Printf("upload completed in %s", time.Since(uploadStartedAt))
 
 	return nil
 }

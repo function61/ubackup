@@ -52,6 +52,8 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 
 		logl.Error.Printf("%s: %v", target.ServiceName, err)
 
+		// raise an alert
+
 		alert := alertmanagertypes.NewAlert(
 			alertSubjects.ServiceBackupFailed(target.ServiceName),
 			err.Error())
@@ -65,7 +67,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	}
 
 	if conf.DockerEndpoint != nil {
-		logl.Debug.Println("starting discovery")
+		logl.Debug.Println("starting Docker discovery")
 
 		containerTargets, err := dockerDiscoverBackupTargets(ctx, *conf.DockerEndpoint)
 		if err != nil {
