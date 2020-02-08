@@ -95,7 +95,8 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	// backup jobs as failed. individual job failing but being able raise an alert is not
 	// an error in the ubackup process itself, and therefore we don't want the switch to activate
 	if alertManagerClient != nil && failedBackupErrorAlerts == 0 {
-		// this dead man's switch semantics are "all backups for this hostname succeeded"
+		// this dead man's switch semantics are:
+		// "all backups for this hostname succeeded or some failed but alerts were raised successfully"
 		checkin := alertmanagertypes.NewDeadMansSwitchCheckinRequest(
 			alertSubjects.DeadMansSwitchKey(),
 			"+25h")

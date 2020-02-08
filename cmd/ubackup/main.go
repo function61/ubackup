@@ -30,9 +30,10 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			ctx := ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger))
-
-			if err := runBackup(ctx, rootLogger); err != nil {
+			if err := runBackup(
+				ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger)),
+				rootLogger,
+			); err != nil {
 				panic(err)
 			}
 		},
