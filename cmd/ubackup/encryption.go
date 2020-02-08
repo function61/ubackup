@@ -54,15 +54,16 @@ func decryptEntry() *cobra.Command {
 			return err
 		}
 
-		if err := backupfile.DecryptAndDecompress(
+		plaintextDecompressed, err := backupfile.CreateDecryptorAndDecompressor(
 			bytes.NewBuffer(privateKeyFile),
-			os.Stdin,
-			os.Stdout,
-		); err != nil {
+			os.Stdin)
+		if err != nil {
 			return err
 		}
 
-		return nil
+		_, err = io.Copy(os.Stdout, plaintextDecompressed)
+
+		return err
 	}
 
 	return &cobra.Command{

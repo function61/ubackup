@@ -1,3 +1,5 @@
+// File format for ubackup. Basically just: pkencryptedstream(gzip(plaintext))
+// pkencryptedstream is aesKeyEnvelope(rsaOaep(aesKey, pubKey)) + iv + aesCtr(plaintextGzipped)
 package backupfile
 
 import (
@@ -42,25 +44,16 @@ func CreateEncryptorAndCompressor(rsaPublicKeyPemPkcs1 io.Reader, sink io.Writer
 	return &encryptorAndCompressor{encryptedWriter, gzip.NewWriter(encryptedWriter)}, nil
 }
 
-func DecryptAndDecompress(rsaPrivateKeyPemPkcs1 io.Reader, ciphertextInput io.Reader, plaintextOutput io.Writer) error {
+func CreateDecryptorAndDecompressor(rsaPrivateKeyPemPkcs1 io.Reader, ciphertextAndCompressedInput io.Reader) (io.Reader, error) {
 	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(rsaPrivateKeyPemPkcs1)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	compressedPlaintextReader, err := pkencryptedstream.Reader(ciphertextInput, privateKey)
+	compressedPlaintextReader, err := pkencryptedstream.Reader(ciphertextAndCompressedInput, privateKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	plaintextReader, err := gzip.NewReader(compressedPlaintextReader)
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(plaintextOutput, plaintextReader); err != nil {
-		return err
-	}
-
-	return nil
+	return gzip.NewReader(compressedPlaintextReader)
 }
