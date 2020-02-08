@@ -16,7 +16,7 @@ Contents:
 - [How to use: as a library](#how-to-use-as-a-library)
 - [Restoring from backup](#restoring-from-backup)
 - [Example configuration file](#example-configuration-file)
-- [S3 bucket IAM policy](#s3-bucket-iam-policy)
+- [S3 bucket IAM policy](#s3-bucket-iam-policy) (security + ransomware protection)
 - [Backup retention](#backup-retention)
 - [How can I be sure it keeps working?](#how-can-i-be-sure-it-keeps-working)
 
@@ -124,7 +124,7 @@ Download:
 ```
 $ mkdir ~/ubackup && cd ~/ubackup/
 $ VERSION_TO_DOWNLOAD="..." # find this from Bintray. Looks like: 20180828_1449_b9d7759cf80f0b4a
-$ curl --location --fail --output ubackup "https://dl.bintray.com/function61/dl/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && sudo chmod +x ubackup
+$ curl --location --fail --output ubackup "https://dl.bintray.com/function61/dl/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && chmod +x ubackup
 ```
 
 Create encryption & decryption keys:
@@ -134,13 +134,13 @@ $ ./ubackup decryption-key-generate > backups.key
 $ ./ubackup decryption-key-to-encryption-key < backups.key > backups.pub
 ```
 
-For security you should not actually ever store the decryption key on the same machine
-that takes the backups, but this is provided for demonstration purposes.
+(For security you should not actually ever store (or even generate) the decryption key on
+the same machine that takes the backups, but this is provided for demonstration purposes.)
 
 Create configuration file stub (and embed encryption key in the config):
 
 ```
-$ ./ubackup print-default-config --pubkey-file backups.pub > config.json
+$ ./ubackup config example --pubkey-file backups.pub > config.json
 ```
 
 Edit the configuration further (specify your S3 bucket details)
@@ -206,8 +206,8 @@ $ ubackup storage get 'varasto/2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-
 
 Now you have the encrypted and compressed file - you still have to decrypt it.
 
-The `decrypt` verb of µbackup requires path to your decryption key, reads the encrypted
-backup file from stdin and outputs the decrypted file to stdout.
+The `decrypt-and-decompress` verb of µbackup requires path to your decryption key, reads
+the encrypted backup file from stdin and outputs the decrypted, uncompressed file to stdout.
 
 ```
 $ ubackup decrypt-and-decompress backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
@@ -263,7 +263,7 @@ You should also consider enabling bucket versioning so that if an attacker gaine
 credentials used by this backup program, she cannot permantently destroy the backups by
 overwriting old backups with empty content (`s3:PutObject` can do that). Versioning would
 allow you to recover these tampered files in this described scenario. This effectively
-implements "ransomware protection".
+implements **ransomware protection**.
 
 ```
 {

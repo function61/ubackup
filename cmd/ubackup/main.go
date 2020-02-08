@@ -79,7 +79,7 @@ func manualEntry() *cobra.Command {
 
 	return &cobra.Command{
 		Use:   "manual-backup [serviceName] [taskId]",
-		Short: "Upload one manual backup",
+		Short: "Compress+encrypt+upload one manual backup (from stdin)",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
