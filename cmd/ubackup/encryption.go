@@ -48,7 +48,7 @@ func decryptionKeyToEncryptionKey(privKeyIn io.Reader, pubKeyOut io.Writer) erro
 }
 
 func decryptEntry() *cobra.Command {
-	decryptAndDecompress := func(pathToPrivateKey string) error {
+	decryptAndDecompress := func(pathToPrivateKey string, input io.Reader, output io.Writer) error {
 		privateKeyFile, err := ioutil.ReadFile(pathToPrivateKey)
 		if err != nil {
 			return err
@@ -56,22 +56,22 @@ func decryptEntry() *cobra.Command {
 
 		plaintextDecompressed, err := backupfile.CreateDecryptorAndDecompressor(
 			bytes.NewBuffer(privateKeyFile),
-			os.Stdin)
+			input)
 		if err != nil {
 			return err
 		}
 
-		_, err = io.Copy(os.Stdout, plaintextDecompressed)
+		_, err = io.Copy(output, plaintextDecompressed)
 
 		return err
 	}
 
 	return &cobra.Command{
 		Use:   "decrypt-and-decompress [pathToPrivateKey]",
-		Short: "Decrypts an encrypted backup file with your private key",
+		Short: "Decrypts an encrypted backup file (from stdin) with your private key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := decryptAndDecompress(args[0]); err != nil {
+			if err := decryptAndDecompress(args[0], os.Stdin, os.Stdout); err != nil {
 				panic(err)
 			}
 		},
