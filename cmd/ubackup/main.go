@@ -40,7 +40,7 @@ func main() {
 	})
 
 	app.AddCommand(schedulerEntry())
-	app.AddCommand(printDefaultConfigEntry())
+	app.AddCommand(configEntry())
 	app.AddCommand(decryptEntry())
 	app.AddCommand(manualEntry())
 	app.AddCommand(storageEntry())
@@ -93,13 +93,39 @@ func manualEntry() *cobra.Command {
 	}
 }
 
-func printDefaultConfigEntry() *cobra.Command {
+func configEntry() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "config",
+		Short:   "Commands related to the configuration file",
+		Version: dynversion.Version,
+	}
+
+	cmd.AddCommand(configExampleEntry())
+	cmd.AddCommand(configValidateEntry())
+
+	return cmd
+}
+
+func configValidateEntry() *cobra.Command {
+	return &cobra.Command{
+		Use:   "validate",
+		Short: "Validates your config file (from stdin)",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true); err != nil {
+				panic(err)
+			}
+		},
+	}
+}
+
+func configExampleEntry() *cobra.Command {
 	kitchenSink := false
 	pubkeyFilePath := ""
 
 	cmd := &cobra.Command{
-		Use:   "print-default-config",
-		Short: "Shows you a default config file format as an example",
+		Use:   "example",
+		Short: "Shows you an example config file",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)); err != nil {

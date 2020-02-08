@@ -217,11 +217,10 @@ $ ubackup decrypt-and-decompress backups.key < '2019-07-26 0825Z_joonas_10028.gz
 Example configuration file
 --------------------------
 
-Run `print-default-config` with `--kitchensink` (= show all the possible configuration
-options), it will look something like this:
+Run the kitchen sink (= all the possible options) example, you get something like this:
 
 ```
-$ ubackup print-default-config --kitchensink
+$ ubackup config example --kitchensink
 {
     "encryption_publickey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...\n-----END RSA PUBLIC KEY-----",
     "docker_endpoint": "unix:///var/run/docker.sock",
@@ -246,8 +245,9 @@ $ ubackup print-default-config --kitchensink
         "baseurl": "https://example.com/url-to-my/alertmanager"
     }
 }
-
 ```
+
+Pro-tip: when writing config, there's also `config validate` command to validate your config.
 
 
 S3 bucket IAM policy
