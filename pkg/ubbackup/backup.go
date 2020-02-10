@@ -28,6 +28,8 @@ func BackupAndStore(
 
 	logl.Info.Printf("starting (%s)", backup.Target.TaskId)
 
+	logl.Debug.Printf("command: %v", backup.Target.BackupCommand)
+
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := ioutil.TempFile("", "ubackup")
 	if err != nil {

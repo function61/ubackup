@@ -116,6 +116,25 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	return nil
 }
 
+func backupOneContainer(
+	ctx context.Context,
+	target ubtypes.BackupTarget,
+	conf ubconfig.Config,
+	logger *log.Logger,
+) error {
+	return ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf, func(backupSink io.Writer) error {
+		dockerExecCmd := append([]string{
+			"docker",
+			"exec",
+			target.TaskId,
+		}, target.BackupCommand...)
+
+		return copyCommandStdout(
+			exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...),
+			backupSink)
+	}, logger)
+}
+
 func copyCommandStdout(cmd *exec.Cmd, backupSink io.Writer) error {
 	cmd.Stderr = os.Stderr
 	stdout, err := cmd.StdoutPipe()
