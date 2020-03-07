@@ -32,7 +32,7 @@ type AlertManagerConfig struct {
 
 func ReadFromEnvOrFile() (*Config, error) {
 	conf := &Config{}
-	confFromEnv, err := envvar.GetFromBase64Encoded("UBACKUP_CONF")
+	confFromEnv, err := envvar.RequiredFromBase64Encoded("UBACKUP_CONF")
 	if err == nil { // FIXME: this swallows invalid base64 syntax error
 		return conf, jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true)
 	} else {

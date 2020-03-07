@@ -1,7 +1,6 @@
 package ubbackup
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/function61/gokit/logex"
@@ -46,7 +45,7 @@ func BackupAndStore(
 	// we need to wrap tempFile with nop closer because we need to close backupWriter to finalize
 	// gzip and encryption, but EncryptorCompressor calls close on the underlying writer which
 	// we don't want to do because we still need to hold the file open
-	backupWriter, err := backupfile.CreateEncryptorAndCompressor(bytes.NewBufferString(conf.EncryptionPublicKey), mkNopWriteCloser(tempFile))
+	backupWriter, err := backupfile.CreateEncryptorAndCompressor(conf.EncryptionPublicKey, mkNopWriteCloser(tempFile))
 	if err != nil {
 		return err
 	}

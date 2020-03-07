@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -31,8 +30,13 @@ func decryptionKeyGenerate(out io.Writer) error {
 	return nil
 }
 
-func decryptionKeyToEncryptionKey(privKeyIn io.Reader, pubKeyOut io.Writer) error {
-	privKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(privKeyIn)
+func decryptionKeyToEncryptionKey(privKeyPemReader io.Reader, pubKeyOut io.Writer) error {
+	privKeyPem, err := ioutil.ReadAll(privKeyPemReader)
+	if err != nil {
+		return err
+	}
+
+	privKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(privKeyPem)
 	if err != nil {
 		return err
 	}
@@ -55,7 +59,7 @@ func decryptEntry() *cobra.Command {
 		}
 
 		plaintextDecompressed, err := backupfile.CreateDecryptorAndDecompressor(
-			bytes.NewBuffer(privateKeyFile),
+			string(privateKeyFile),
 			input)
 		if err != nil {
 			return err

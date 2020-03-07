@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/promswarmconnect/pkg/udocker"
+	"github.com/function61/gokit/udocker"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"net/http"
 	"strings"
@@ -17,7 +17,7 @@ const (
 
 // returns containers that have ENV var "BACKUP_COMMAND" defined
 func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
-	dockerClient, base, err := udocker.Client(dockerEndpoint)
+	dockerClient, base, err := udocker.Client(dockerEndpoint, nil, false)
 	if err != nil {
 		return nil, fmt.Errorf("udocker.Client: %v", err)
 	}
