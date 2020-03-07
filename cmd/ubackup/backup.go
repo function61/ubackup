@@ -10,10 +10,8 @@ import (
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
-	"io"
 	"log"
 	"os"
-	"os/exec"
 )
 
 func runBackup(ctx context.Context, logger *log.Logger) error {
@@ -76,31 +74,28 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		for _, containerTarget := range containerTargets {
 			if err := ubbackup.BackupAndStore(
 				ctx,
-				ubtypes.BackupForTarget(containerTarget.BackupTarget),
+				ubtypes.BackupForTarget(containerTarget),
 				*conf,
-				containerTarget.Produce,
 				logger,
 			); err != nil {
-				handleOneFailure(containerTarget.BackupTarget, err)
+				handleOneFailure(containerTarget, err)
 			}
 		}
 	}
 
 	for _, staticTarget := range conf.StaticTargets {
-		staticTarget := staticTarget // pin
+		target := ubtypes.BackupTarget{
+			ServiceName: staticTarget.ServiceName,
+			Snapshotter: newCommandOutputSnapshotter(staticTarget.BackupCommand, ""),
+		}
 
 		if err := ubbackup.BackupAndStore(
 			ctx,
-			ubtypes.BackupForTarget(staticTarget),
+			ubtypes.BackupForTarget(target),
 			*conf,
-			func(backupSink io.Writer) error {
-				return copyCommandStdout(
-					exec.Command(staticTarget.BackupCommand[0], staticTarget.BackupCommand[1:]...),
-					backupSink)
-			},
 			logger,
 		); err != nil {
-			handleOneFailure(staticTarget, err)
+			handleOneFailure(target, err)
 		}
 	}
 
@@ -126,28 +121,6 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	}
 
 	logl.Info.Println("completed succesfully")
-
-	return nil
-}
-
-func copyCommandStdout(cmd *exec.Cmd, backupSink io.Writer) error {
-	cmd.Stderr = os.Stderr
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(backupSink, stdout); err != nil {
-		return err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return err
-	}
 
 	return nil
 }

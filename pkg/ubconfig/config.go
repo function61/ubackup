@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/jsonfile"
-	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
 type Config struct {
-	EncryptionPublicKey string                 `json:"encryption_publickey"`
-	DockerEndpoint      *string                `json:"docker_endpoint,omitempty"`
-	StaticTargets       []ubtypes.BackupTarget `json:"static_targets"`
-	Storage             StorageConfig          `json:"storage"`
-	AlertManager        *AlertManagerConfig    `json:"alertmanager,omitempty"`
+	EncryptionPublicKey string              `json:"encryption_publickey"`
+	DockerEndpoint      *string             `json:"docker_endpoint,omitempty"`
+	StaticTargets       []StaticTarget      `json:"static_targets"`
+	Storage             StorageConfig       `json:"storage"`
+	AlertManager        *AlertManagerConfig `json:"alertmanager,omitempty"`
+}
+
+type StaticTarget struct {
+	ServiceName   string   `json:"service_name"`
+	BackupCommand []string `json:"backup_command"`
 }
 
 type StorageConfig struct {

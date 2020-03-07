@@ -2,7 +2,6 @@ package ubconfig
 
 import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/function61/ubackup/pkg/ubtypes"
 	"io/ioutil"
 )
 
@@ -20,7 +19,7 @@ func DefaultConfig(pubkeyFilePath string, kitchenSink bool) *Config {
 
 	dockerEndpoint := "unix:///var/run/docker.sock"
 
-	staticTargets := []ubtypes.BackupTarget{}
+	staticTargets := []StaticTarget{}
 
 	var alertManager *AlertManagerConfig
 
@@ -31,7 +30,7 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 -----END RSA PUBLIC KEY-----`
 		}
 
-		staticTargets = append(staticTargets, ubtypes.BackupTarget{
+		staticTargets = append(staticTargets, StaticTarget{
 			ServiceName:   "someapp",
 			BackupCommand: []string{"cat", "/var/lib/someapp/file.log"},
 		})

@@ -7,9 +7,7 @@ import (
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/udocker"
 	"github.com/function61/ubackup/pkg/ubtypes"
-	"io"
 	"net/http"
-	"os/exec"
 	"strings"
 )
 
@@ -17,13 +15,8 @@ const (
 	backupCommandEnvKey = "BACKUP_COMMAND"
 )
 
-type DockerTarget struct {
-	BackupTarget ubtypes.BackupTarget
-	Produce      func(backupSink io.Writer) error
-}
-
 // returns containers that have ENV var "BACKUP_COMMAND" defined
-func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]DockerTarget, error) {
+func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint, nil, false)
 	if err != nil {
 		return nil, fmt.Errorf("udocker.Client: %v", err)
@@ -48,7 +41,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		return nil, err
 	}
 
-	targets := []DockerTarget{}
+	targets := []ubtypes.BackupTarget{}
 
 	for _, inspected := range inspecteds {
 		foundBackupCommand := ""
@@ -69,32 +62,24 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 			serviceName = "none"
 		}
 
-		// FIXME
+		// Docker CLI truncates ids to this long. using same here to shorten filenames
+		taskId := inspected.Id[0:12]
+
+		// FIXME: this doesn't support spaces..
 		backupCommandParsed := strings.Split(foundBackupCommand, " ")
 
-		target := ubtypes.BackupTarget{
-			ServiceName:   serviceName,
-			TaskId:        inspected.Id[0:12], // Docker CLI truncates ids to this long. using same here to shorten filenames
-			BackupCommand: backupCommandParsed,
-		}
+		dockerExecCmd := append([]string{
+			"docker",
+			"exec",
+			taskId,
+		}, backupCommandParsed...)
 
-		producer := func(target ubtypes.BackupTarget) func(io.Writer) error {
-			return func(backupSink io.Writer) error {
-				dockerExecCmd := append([]string{
-					"docker",
-					"exec",
-					target.TaskId,
-				}, target.BackupCommand...)
+		snapshotter := newCommandOutputSnapshotter(dockerExecCmd, "")
 
-				return copyCommandStdout(
-					exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...),
-					backupSink)
-			}
-		}(target)
-
-		targets = append(targets, DockerTarget{
-			Produce:      producer,
-			BackupTarget: target,
+		targets = append(targets, ubtypes.BackupTarget{
+			ServiceName: serviceName,
+			TaskId:      taskId,
+			Snapshotter: snapshotter,
 		})
 	}
 

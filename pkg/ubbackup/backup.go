@@ -20,14 +20,13 @@ func BackupAndStore(
 	ctx context.Context,
 	backup ubtypes.Backup,
 	conf ubconfig.Config,
-	produce func(io.Writer) error,
 	logger *log.Logger,
 ) error {
 	logl := logex.Levels(logex.Prefix(backup.Target.ServiceName, logger))
 
 	logl.Info.Printf("starting (%s)", backup.Target.TaskId)
 
-	logl.Debug.Printf("command: %v", backup.Target.BackupCommand)
+	logl.Debug.Printf("snapshotter: %s", backup.Target.Snapshotter.Describe())
 
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := ioutil.TempFile("", "ubackup")
@@ -52,7 +51,7 @@ func BackupAndStore(
 
 	snapshotStartedAt := time.Now()
 
-	if err := produce(backupWriter); err != nil {
+	if err := backup.Target.Snapshotter.CreateSnapshot(backupWriter); err != nil {
 		return fmt.Errorf("snapshot failed (in %s): %v", time.Since(snapshotStartedAt), err)
 	}
 
