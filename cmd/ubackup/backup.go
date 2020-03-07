@@ -42,26 +42,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 	}
 
-	failedBackups := 0
-	failedBackupErrorAlerts := 0
-
-	handleOneFailure := func(target ubtypes.BackupTarget, err error) {
-		failedBackups++
-
-		logl.Error.Printf("%s: %v", target.ServiceName, err)
-
-		// raise an alert
-		if alertManagerClient != nil {
-			alert := alertmanagertypes.NewAlert(
-				alertSubjects.ServiceBackupFailed(target.ServiceName),
-				err.Error())
-
-			if err := alertManagerClient.Alert(ctx, alert); err != nil {
-				logl.Error.Println(err.Error())
-				failedBackupErrorAlerts++
-			}
-		}
-	}
+	targets := []ubtypes.BackupTarget{}
 
 	if conf.DockerEndpoint != nil {
 		logl.Debug.Println("starting Docker discovery")
@@ -71,31 +52,42 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 			return err
 		}
 
-		for _, containerTarget := range containerTargets {
-			if err := ubbackup.BackupAndStore(
-				ctx,
-				ubtypes.BackupForTarget(containerTarget),
-				*conf,
-				logger,
-			); err != nil {
-				handleOneFailure(containerTarget, err)
-			}
-		}
+		targets = append(targets, containerTargets...)
 	}
 
 	for _, staticTarget := range conf.StaticTargets {
-		target := ubtypes.BackupTarget{
+		// adapt config's static targets into BackupTarget type (complete with snapshotter)
+		targets = append(targets, ubtypes.BackupTarget{
 			ServiceName: staticTarget.ServiceName,
 			Snapshotter: newCommandOutputSnapshotter(staticTarget.BackupCommand, ""),
-		}
+		})
+	}
 
+	failedBackups := 0
+	failedBackupErrorAlerts := 0
+
+	for _, target := range targets {
 		if err := ubbackup.BackupAndStore(
 			ctx,
 			ubtypes.BackupForTarget(target),
 			*conf,
 			logger,
 		); err != nil {
-			handleOneFailure(target, err)
+			failedBackups++
+
+			logl.Error.Printf("%s: %v", target.ServiceName, err)
+
+			// raise an alert
+			if alertManagerClient != nil {
+				alert := alertmanagertypes.NewAlert(
+					alertSubjects.ServiceBackupFailed(target.ServiceName),
+					err.Error())
+
+				if err := alertManagerClient.Alert(ctx, alert); err != nil {
+					logl.Error.Println(err.Error())
+					failedBackupErrorAlerts++
+				}
+			}
 		}
 	}
 
