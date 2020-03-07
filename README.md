@@ -1,5 +1,5 @@
 ![Build status](https://github.com/function61/ubackup/workflows/Build/badge.svg)
-[![Download](https://img.shields.io/bintray/v/function61/dl/ubackup.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/ubackup/_latestVersion#files)
+[![Download](https://img.shields.io/github/downloads/function61/ubackup/total.svg?style=for-the-badge)](https://github.com/function61/ubackup/releases)
 [![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
 µbackup is a program/library/Docker image for taking backups of your Docker containers (or
@@ -132,13 +132,7 @@ Note: `VERSION` is the same as you would find for the binary installation.
 How to use: binary installation
 -------------------------------
 
-Download:
-
-```
-$ mkdir ~/ubackup && cd ~/ubackup/
-$ VERSION_TO_DOWNLOAD="..." # find this from Bintray. Looks like: 20180828_1449_b9d7759cf80f0b4a
-$ curl --location --fail --output ubackup "https://dl.bintray.com/function61/dl/ubackup/$VERSION_TO_DOWNLOAD/ubackup_linux-amd64" && chmod +x ubackup
-```
+Download appropriate release binary for you from the download link.
 
 Create encryption & decryption keys:
 
