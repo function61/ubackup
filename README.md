@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/travis/function61/ubackup.svg?style=for-the-badge)](https://travis-ci.org/function61/ubackup)
+![Build status](https://github.com/function61/ubackup/workflows/Build/badge.svg)
 [![Download](https://img.shields.io/bintray/v/function61/dl/ubackup.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/ubackup/_latestVersion#files)
 [![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
