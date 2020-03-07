@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/udocker"
 	"github.com/function61/ubackup/pkg/ubtypes"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -77,11 +78,34 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 	return targets, nil
 }
 
+// "dockervolume://" => docker volume snapshotter
 // "cat /data/example.db" => ["docker", "exec", "cat", "/data/example.db"]
 func createSnapshotter(
 	backupCommand string,
 	container udocker.Container,
 ) ubtypes.Snapshotter {
+	if backupCommand == "dockervolume://" {
+		volumeMounts := []udocker.Mount{}
+		for _, mount := range container.Mounts {
+			if mount.Type == "volume" {
+				volumeMounts = append(volumeMounts, mount)
+			}
+		}
+
+		if len(volumeMounts) != 1 {
+			log.Printf(
+				"disqualifying container %s with dockervolume:// because len(volumeMounts) != 1; got %d",
+				container.Name,
+				len(volumeMounts))
+
+			return nil
+		}
+
+		return newCommandOutputSnapshotter(
+			[]string{"tar", "--create", "."},
+			volumeMounts[0].Source)
+	}
+
 	// FIXME: this doesn't support spaces..
 	backupCommandParts := strings.Split(backupCommand, " ")
 

@@ -54,13 +54,24 @@ Docker host, configure the Docker integration via µbackup config)
 `$ docker run -e "BACKUP_COMMAND=..."` for example) that contains the command used to take
 a backup of the important state inside the container.
 
-If you need to backup a single file inside a container, use: `BACKUP_COMMAND=cat /yourfile.db`
+For different use cases, for `BACKUP_COMMAND` specify:
 
-For PostgreSQL, you could use: `BACKUP_COMMAND=pg_dump -U postgres nameOfYourDatabase`
+- If you need to backup a single file inside a container
+  * Use: `BACKUP_COMMAND=cat /yourfile.db`
 
-For a directory, you could use: `BACKUP_COMMAND=tar -cC /yourdirectory -f - .` (`-` means
-`$ tar` will write the archive to `stdout`, `.` just means to process all files in the
-selected directory)
+- For databases etc. that support atomic dumping, e.g. PostgreSQL
+  * Use: `BACKUP_COMMAND=pg_dump -U postgres nameOfYourDatabase`
+
+- For a directory
+  * Use: `BACKUP_COMMAND=tar -cC /yourdirectory -f - .`
+  * `-` means `$ tar` will write the archive to `stdout`, `.` just means to process all files in the
+    selected directory).
+
+- If there's no tooling inside the container (think `FROM scratch`), if you have a Docker
+  volume you want to archive in its entirety
+  * Use: `BACKUP_COMMAND=dockervolume://` and µbackup will find the volume source data via
+    Docker and use `tar` to dump the whole directory tree.
+  * For this option, you have to run µbackup with `$ docker run -v /var/lib/docker/volumes:/var/lib/docker/volumes`
 
 This simple approach is surprisingly flexible and its streaming approach is more efficient
 than having to write temporary files.
