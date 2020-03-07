@@ -111,7 +111,7 @@ First, do the configuration steps from below section "How to use: binary install
 You only need to do them to create correct `config.json` file. Now, convert that file for
 embedding as ENV variable:
 
-```
+```console
 $ cat config.json | base64 -w 0
 ```
 
@@ -119,7 +119,7 @@ That value will be your `UBACKUP_CONF` ENV var.
 
 Now, just deploy Docker service as global service in the cluster (= runs on every node):
 
-```
+```console
 $ docker service create --name ubackup --mode global \
 	--mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
 	-e UBACKUP_CONF=... \
@@ -136,7 +136,7 @@ Download appropriate release binary for you from the download link.
 
 Create encryption & decryption keys:
 
-```
+```console
 $ ./ubackup decryption-key-generate > backups.key
 $ ./ubackup decryption-key-to-encryption-key < backups.key > backups.pub
 ```
@@ -146,25 +146,25 @@ the same machine that takes the backups, but this is provided for demonstration 
 
 Create configuration file stub (and embed encryption key in the config):
 
-```
+```console
 $ ./ubackup config example --pubkey-file backups.pub > config.json
 ```
 
 Edit the configuration further (specify your S3 bucket details)
 
-```
+```console
 $ vim config.json
 ```
 
 Install & start the service:
 
-```
+```console
 $ ./ubackup scheduler install-systemd-service-file
 Wrote unit file to /etc/systemd/system/ubackup.service
 Run to enable on boot & to start now:
-        $ systemctl enable ubackup
-        $ systemctl start ubackup
-        $ systemctl status ubackup
+    $ systemctl enable ubackup
+    $ systemctl start ubackup
+    $ systemctl status ubackup
 ```
 
 
@@ -201,7 +201,7 @@ a restore. Without disaster recovery drills you don't know if your backups work.
 Download the `.gz.aes` backup file from your S3 bucket. You can also do it from µbackup CLI
 (just give the service ID the backup was stored under - in this example it's `varasto`):
 
-```
+```console
 $ ubackup storage ls varasto
 varasto/2019-07-25 0830Z_joonas_10028.gz.aes
 varasto/2019-07-26 0825Z_joonas_10028.gz.aes
@@ -209,7 +209,7 @@ varasto/2019-07-26 0825Z_joonas_10028.gz.aes
 
 The lines output are "backup ID"s, which is enough info to download the backup:
 
-```
+```console
 $ ubackup storage get 'varasto/2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028.gz.aes'
 ```
 
@@ -218,7 +218,7 @@ Now you have the encrypted and compressed file - you still have to decrypt it.
 The `decrypt-and-decompress` verb of µbackup requires path to your decryption key, reads
 the encrypted backup file from stdin and outputs the decrypted, uncompressed file to stdout.
 
-```
+```console
 $ ubackup decrypt-and-decompress backups.key < '2019-07-26 0825Z_joonas_10028.gz.aes' > '2019-07-26 0825Z_joonas_10028'
 ```
 
@@ -228,7 +228,7 @@ Example configuration file
 
 Run the kitchen sink (= all the possible options) example, you get something like this:
 
-```
+```console
 $ ubackup config example --kitchensink
 {
     "encryption_publickey": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...\n-----END RSA PUBLIC KEY-----",
@@ -274,7 +274,7 @@ overwriting old backups with empty content (`s3:PutObject` can do that). Version
 allow you to recover these tampered files in this described scenario. This effectively
 implements **ransomware protection**.
 
-```
+```json
 {
     "Version": "2012-10-17",
     "Statement": [
