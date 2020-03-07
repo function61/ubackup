@@ -43,10 +43,10 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 
 	targets := []ubtypes.BackupTarget{}
 
-	for _, inspected := range inspecteds {
+	for _, container := range inspecteds {
 		foundBackupCommand := ""
 
-		for _, envSerialized := range inspected.Config.Env {
+		for _, envSerialized := range container.Config.Env {
 			key, value := envvar.Parse(envSerialized)
 			if key == backupCommandEnvKey {
 				foundBackupCommand = value
@@ -57,28 +57,19 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 			continue
 		}
 
-		serviceName := inspected.Config.Labels[udocker.SwarmServiceNameLabelKey]
+		serviceName := container.Config.Labels[udocker.SwarmServiceNameLabelKey]
 		if serviceName == "" {
 			serviceName = "none"
 		}
 
-		// Docker CLI truncates ids to this long. using same here to shorten filenames
-		taskId := inspected.Id[0:12]
-
-		// FIXME: this doesn't support spaces..
-		backupCommandParsed := strings.Split(foundBackupCommand, " ")
-
-		dockerExecCmd := append([]string{
-			"docker",
-			"exec",
-			taskId,
-		}, backupCommandParsed...)
-
-		snapshotter := newCommandOutputSnapshotter(dockerExecCmd, "")
+		snapshotter := createSnapshotter(foundBackupCommand, container)
+		if snapshotter == nil { // warning was logged
+			continue
+		}
 
 		targets = append(targets, ubtypes.BackupTarget{
 			ServiceName: serviceName,
-			TaskId:      taskId,
+			TaskId:      dockerShortenContainerId(container), // for shorter backup filenames
 			Snapshotter: snapshotter,
 		})
 	}
@@ -86,7 +77,29 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 	return targets, nil
 }
 
-func inspectAllContainers(ctx context.Context, containerMetas []udocker.ContainerListItem, base string, dockerClient *http.Client) ([]udocker.Container, error) {
+// "cat /data/example.db" => ["docker", "exec", "cat", "/data/example.db"]
+func createSnapshotter(
+	backupCommand string,
+	container udocker.Container,
+) ubtypes.Snapshotter {
+	// FIXME: this doesn't support spaces..
+	backupCommandParts := strings.Split(backupCommand, " ")
+
+	dockerExecCmd := append([]string{
+		"docker",
+		"exec",
+		dockerShortenContainerId(container), // for less verbose log messages
+	}, backupCommandParts...)
+
+	return newCommandOutputSnapshotter(dockerExecCmd, "")
+}
+
+func inspectAllContainers(
+	ctx context.Context,
+	containerMetas []udocker.ContainerListItem,
+	base string,
+	dockerClient *http.Client,
+) ([]udocker.Container, error) {
 	containers := []udocker.Container{}
 
 	for _, meta := range containerMetas {
@@ -106,4 +119,9 @@ func inspectAllContainers(ctx context.Context, containerMetas []udocker.Containe
 	}
 
 	return containers, nil
+}
+
+func dockerShortenContainerId(container udocker.Container) string {
+	// Docker CLI truncates ids to this long
+	return container.Id[0:12]
 }
