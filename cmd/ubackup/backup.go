@@ -74,8 +74,14 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		}
 
 		for _, containerTarget := range containerTargets {
-			if err := backupOneContainer(ctx, containerTarget, *conf, logger); err != nil {
-				handleOneFailure(containerTarget, err)
+			if err := ubbackup.BackupAndStore(
+				ctx,
+				ubtypes.BackupForTarget(containerTarget.BackupTarget),
+				*conf,
+				containerTarget.Produce,
+				logger,
+			); err != nil {
+				handleOneFailure(containerTarget.BackupTarget, err)
 			}
 		}
 	}
@@ -83,9 +89,17 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	for _, staticTarget := range conf.StaticTargets {
 		staticTarget := staticTarget // pin
 
-		if err := ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(staticTarget), *conf, func(backupSink io.Writer) error {
-			return copyCommandStdout(exec.Command(staticTarget.BackupCommand[0], staticTarget.BackupCommand[1:]...), backupSink)
-		}, logger); err != nil {
+		if err := ubbackup.BackupAndStore(
+			ctx,
+			ubtypes.BackupForTarget(staticTarget),
+			*conf,
+			func(backupSink io.Writer) error {
+				return copyCommandStdout(
+					exec.Command(staticTarget.BackupCommand[0], staticTarget.BackupCommand[1:]...),
+					backupSink)
+			},
+			logger,
+		); err != nil {
 			handleOneFailure(staticTarget, err)
 		}
 	}
@@ -114,25 +128,6 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	logl.Info.Println("completed succesfully")
 
 	return nil
-}
-
-func backupOneContainer(
-	ctx context.Context,
-	target ubtypes.BackupTarget,
-	conf ubconfig.Config,
-	logger *log.Logger,
-) error {
-	return ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(target), conf, func(backupSink io.Writer) error {
-		dockerExecCmd := append([]string{
-			"docker",
-			"exec",
-			target.TaskId,
-		}, target.BackupCommand...)
-
-		return copyCommandStdout(
-			exec.Command(dockerExecCmd[0], dockerExecCmd[1:]...),
-			backupSink)
-	}, logger)
 }
 
 func copyCommandStdout(cmd *exec.Cmd, backupSink io.Writer) error {
