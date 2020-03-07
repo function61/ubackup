@@ -65,9 +65,7 @@ func storageEntry() *cobra.Command {
 		Short: "List backups from storage for a service",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := ls(args[0]); err != nil {
-				panic(err)
-			}
+			exitIfError(ls(args[0]))
 		},
 	})
 
@@ -76,9 +74,7 @@ func storageEntry() *cobra.Command {
 		Short: "Get backup from storage",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := get(args[0]); err != nil {
-				panic(err)
-			}
+			exitIfError(get(args[0]))
 		},
 	})
 

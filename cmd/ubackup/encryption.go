@@ -75,9 +75,7 @@ func decryptEntry() *cobra.Command {
 		Short: "Decrypts an encrypted backup file (from stdin) with your private key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := decryptAndDecompress(args[0], os.Stdin, os.Stdout); err != nil {
-				panic(err)
-			}
+			exitIfError(decryptAndDecompress(args[0], os.Stdin, os.Stdout))
 		},
 	}
 }
@@ -88,9 +86,7 @@ func decryptionKeyGenerateEntry() *cobra.Command {
 		Short: "Generate RSA private key for backup decryption",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := decryptionKeyGenerate(os.Stdout); err != nil {
-				panic(err)
-			}
+			exitIfError(decryptionKeyGenerate(os.Stdout))
 		},
 	}
 }
@@ -101,9 +97,7 @@ func decryptionKeyToEncryptionKeyEntry() *cobra.Command {
 		Short: "Prints encryption key (= public key) of decryption key (= private key)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := decryptionKeyToEncryptionKey(os.Stdin, os.Stdout); err != nil {
-				panic(err)
-			}
+			exitIfError(decryptionKeyToEncryptionKey(os.Stdin, os.Stdout))
 		},
 	}
 }

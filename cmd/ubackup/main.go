@@ -30,12 +30,10 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			if err := runBackup(
+			exitIfError(runBackup(
 				ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger)),
 				rootLogger,
-			); err != nil {
-				panic(err)
-			}
+			))
 		},
 	})
 
@@ -47,10 +45,7 @@ func main() {
 	app.AddCommand(decryptionKeyGenerateEntry())
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
-	if err := app.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	exitIfError(app.Execute())
 }
 
 func manualEntry() *cobra.Command {
@@ -84,11 +79,12 @@ func manualEntry() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			ctx := ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger))
-
-			if err := manual(ctx, args[0], args[1], os.Stdin, rootLogger); err != nil {
-				panic(err)
-			}
+			exitIfError(manual(
+				ossignal.InterruptOrTerminateBackgroundCtx(rootLogger),
+				args[0],
+				args[1],
+				os.Stdin,
+				rootLogger))
 		},
 	}
 }
@@ -112,9 +108,7 @@ func configValidateEntry() *cobra.Command {
 		Short: "Validates your config file (from stdin)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true); err != nil {
-				panic(err)
-			}
+			exitIfError(jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true))
 		},
 	}
 }
@@ -128,9 +122,7 @@ func configExampleEntry() *cobra.Command {
 		Short: "Shows you an example config file",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)); err != nil {
-				panic(err)
-			}
+			exitIfError(jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)))
 		},
 	}
 
@@ -138,4 +130,10 @@ func configExampleEntry() *cobra.Command {
 	cmd.Flags().BoolVarP(&kitchenSink, "kitchensink", "", kitchenSink, "All the possible configuration option examples")
 
 	return cmd
+}
+
+func exitIfError(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
 }

@@ -79,9 +79,10 @@ func schedulerEntry() *cobra.Command {
 				return nil
 			}
 
-			if err := runScheduler(ctx, backupTime, logex.Prefix("scheduler", rootLogger)); err != nil {
-				panic(err)
-			}
+			exitIfError(runScheduler(
+				ctx,
+				backupTime,
+				logex.Prefix("scheduler", rootLogger)))
 		},
 	})
 
@@ -95,9 +96,8 @@ func schedulerEntry() *cobra.Command {
 				"µbackup",
 				systemdinstaller.Args("scheduler", "run"),
 				systemdinstaller.Docs("https://function61.com/"))
-			if err := systemdinstaller.Install(service); err != nil {
-				panic(err)
-			}
+
+			exitIfError(systemdinstaller.Install(service))
 
 			fmt.Println(systemdinstaller.GetHints(service))
 		},
