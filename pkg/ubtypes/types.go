@@ -32,11 +32,11 @@ func BackupForTarget(target BackupTarget) Backup {
 }
 
 type customStreamSnapshotter struct {
-	io.Reader
+	fn func(sink io.Writer) error
 }
 
-func CustomStream(stream io.Reader) Snapshotter {
-	return &customStreamSnapshotter{stream}
+func CustomStream(fn func(sink io.Writer) error) Snapshotter {
+	return &customStreamSnapshotter{fn}
 }
 
 func (c *customStreamSnapshotter) Describe() string {
@@ -44,6 +44,5 @@ func (c *customStreamSnapshotter) Describe() string {
 }
 
 func (c *customStreamSnapshotter) CreateSnapshot(sink io.Writer) error {
-	_, err := io.Copy(sink, c.Reader)
-	return err
+	return c.fn(sink)
 }

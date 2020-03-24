@@ -64,7 +64,10 @@ func manualEntry() *cobra.Command {
 		backup := ubtypes.BackupTarget{
 			ServiceName: serviceName,
 			TaskId:      taskId,
-			Snapshotter: ubtypes.CustomStream(backupStream),
+			Snapshotter: ubtypes.CustomStream(func(backupSink io.Writer) error {
+				_, err := io.Copy(backupSink, backupStream)
+				return err
+			}),
 		}
 
 		return ubbackup.BackupAndStore(
