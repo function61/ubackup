@@ -1,9 +1,10 @@
 package ubstorage
 
 import (
-	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"time"
+
+	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
 type StoredBackup struct {

@@ -2,8 +2,9 @@ package ubstorage
 
 import (
 	"errors"
-	"github.com/function61/ubackup/pkg/ubconfig"
 	"log"
+
+	"github.com/function61/ubackup/pkg/ubconfig"
 )
 
 func StorageFromConfig(conf ubconfig.StorageConfig, logger *log.Logger) (Storage, error) {

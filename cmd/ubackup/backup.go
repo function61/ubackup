@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/lambda-alertmanager/pkg/alertmanagerclient"
 	"github.com/function61/lambda-alertmanager/pkg/alertmanagertypes"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
-	"log"
-	"os"
 )
 
 func runBackup(ctx context.Context, logger *log.Logger) error {

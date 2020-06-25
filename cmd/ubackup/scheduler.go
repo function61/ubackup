@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/osutil"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/spf13/cobra"
-	"log"
-	"time"
 )
 
 // backupTime should return error not if individual backup fails, but if its error is so

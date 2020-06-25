@@ -4,9 +4,10 @@ package backupfile
 
 import (
 	"compress/gzip"
+	"io"
+
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/pkencryptedstream"
-	"io"
 )
 
 type encryptorAndCompressor struct {

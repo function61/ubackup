@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"os"
 	"os/exec"
+
+	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
 type commandOutputSnapshotter struct {

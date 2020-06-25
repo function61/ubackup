@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
+
 	"github.com/function61/gokit/envvar"
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/udocker"
 	"github.com/function61/ubackup/pkg/ubtypes"
-	"log"
-	"net/http"
-	"strings"
 )
 
 const (

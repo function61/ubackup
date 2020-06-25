@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/osutil"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubstorage"
 	"github.com/spf13/cobra"
-	"io"
-	"os"
 )
 
 func storageEntry() *cobra.Command {

@@ -1,8 +1,9 @@
 package ubconfig
 
 import (
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"io/ioutil"
+
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
 
 func DefaultConfig(pubkeyFilePath string, kitchenSink bool) *Config {

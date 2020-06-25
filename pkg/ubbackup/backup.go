@@ -3,16 +3,17 @@ package ubbackup
 import (
 	"context"
 	"fmt"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/ubackup/pkg/backupfile"
-	"github.com/function61/ubackup/pkg/ubconfig"
-	"github.com/function61/ubackup/pkg/ubstorage"
-	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
+
+	"github.com/function61/gokit/logex"
+	"github.com/function61/ubackup/pkg/backupfile"
+	"github.com/function61/ubackup/pkg/ubconfig"
+	"github.com/function61/ubackup/pkg/ubstorage"
+	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
 // takes backup from one target, encrypting it and storing it in storage specified in Config

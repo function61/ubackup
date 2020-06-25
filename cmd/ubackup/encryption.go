@@ -4,13 +4,14 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"io"
+	"io/ioutil"
+	"os"
+
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/osutil"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
 func decryptionKeyGenerate(out io.Writer) error {

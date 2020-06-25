@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"io"
+	"log"
+	"os"
+
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
@@ -10,9 +14,6 @@ import (
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/spf13/cobra"
-	"io"
-	"log"
-	"os"
 )
 
 func main() {
