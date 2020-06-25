@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubstorage"
 	"github.com/spf13/cobra"
@@ -65,7 +66,7 @@ func storageEntry() *cobra.Command {
 		Short: "List backups from storage for a service",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(ls(args[0]))
+			osutil.ExitIfError(ls(args[0]))
 		},
 	})
 
@@ -74,7 +75,7 @@ func storageEntry() *cobra.Command {
 		Short: "Get backup from storage",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(get(args[0]))
+			osutil.ExitIfError(get(args[0]))
 		},
 	})
 

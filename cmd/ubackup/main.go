@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
@@ -30,8 +29,8 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			exitIfError(runBackup(
-				ossignal.InterruptOrTerminateBackgroundCtx(logex.Prefix("main", rootLogger)),
+			osutil.ExitIfError(runBackup(
+				osutil.CancelOnInterruptOrTerminate(logex.Prefix("main", rootLogger)),
 				rootLogger,
 			))
 		},
@@ -45,7 +44,7 @@ func main() {
 	app.AddCommand(decryptionKeyGenerateEntry())
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
-	exitIfError(app.Execute())
+	osutil.ExitIfError(app.Execute())
 }
 
 func manualEntry() *cobra.Command {
@@ -84,8 +83,8 @@ func manualEntry() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			exitIfError(manual(
-				ossignal.InterruptOrTerminateBackgroundCtx(rootLogger),
+			osutil.ExitIfError(manual(
+				osutil.CancelOnInterruptOrTerminate(rootLogger),
 				args[0],
 				args[1],
 				os.Stdin,
@@ -113,7 +112,7 @@ func configValidateEntry() *cobra.Command {
 		Short: "Validates your config file (from stdin)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true))
+			osutil.ExitIfError(jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true))
 		},
 	}
 }
@@ -127,7 +126,7 @@ func configExampleEntry() *cobra.Command {
 		Short: "Shows you an example config file",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)))
+			osutil.ExitIfError(jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)))
 		},
 	}
 
@@ -135,10 +134,4 @@ func configExampleEntry() *cobra.Command {
 	cmd.Flags().BoolVarP(&kitchenSink, "kitchensink", "", kitchenSink, "All the possible configuration option examples")
 
 	return cmd
-}
-
-func exitIfError(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
 }

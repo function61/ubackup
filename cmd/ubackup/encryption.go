@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"github.com/function61/gokit/cryptoutil"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
 	"io"
@@ -75,7 +76,7 @@ func decryptEntry() *cobra.Command {
 		Short: "Decrypts an encrypted backup file (from stdin) with your private key",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(decryptAndDecompress(args[0], os.Stdin, os.Stdout))
+			osutil.ExitIfError(decryptAndDecompress(args[0], os.Stdin, os.Stdout))
 		},
 	}
 }
@@ -86,7 +87,7 @@ func decryptionKeyGenerateEntry() *cobra.Command {
 		Short: "Generate RSA private key for backup decryption",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(decryptionKeyGenerate(os.Stdout))
+			osutil.ExitIfError(decryptionKeyGenerate(os.Stdout))
 		},
 	}
 }
@@ -97,7 +98,7 @@ func decryptionKeyToEncryptionKeyEntry() *cobra.Command {
 		Short: "Prints encryption key (= public key) of decryption key (= private key)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(decryptionKeyToEncryptionKey(os.Stdin, os.Stdout))
+			osutil.ExitIfError(decryptionKeyToEncryptionKey(os.Stdin, os.Stdout))
 		},
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/spf13/cobra"
 	"log"
@@ -66,7 +66,7 @@ func schedulerEntry() *cobra.Command {
 			mainLogger := logex.Prefix("main", rootLogger)
 			logl := logex.Levels(mainLogger)
 
-			ctx := ossignal.InterruptOrTerminateBackgroundCtx(mainLogger)
+			ctx := osutil.CancelOnInterruptOrTerminate(mainLogger)
 
 			logl.Info.Printf("Started %s", dynversion.Version)
 
@@ -79,7 +79,7 @@ func schedulerEntry() *cobra.Command {
 				return nil
 			}
 
-			exitIfError(runScheduler(
+			osutil.ExitIfError(runScheduler(
 				ctx,
 				backupTime,
 				logex.Prefix("scheduler", rootLogger)))
@@ -97,7 +97,7 @@ func schedulerEntry() *cobra.Command {
 				systemdinstaller.Args("scheduler", "run"),
 				systemdinstaller.Docs("https://function61.com/"))
 
-			exitIfError(systemdinstaller.Install(service))
+			osutil.ExitIfError(systemdinstaller.Install(service))
 
 			fmt.Println(systemdinstaller.GetHints(service))
 		},

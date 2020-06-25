@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,8 +24,25 @@ const (
 )
 
 type s3BackupStorage struct {
-	conf ubconfig.StorageS3Config
-	logl *logex.Leveled
+	bucket *s3facade.BucketContext
+	logl   *logex.Leveled
+}
+
+func NewS3BackupStorage(s3conf ubconfig.StorageS3Config, logger *log.Logger) (Storage, error) {
+	staticCredentials := credentials.NewStaticCredentials(
+		s3conf.AccessKeyId,
+		s3conf.AccessKeySecret,
+		"")
+
+	bucket, err := s3facade.Bucket(
+		s3conf.Bucket,
+		s3facade.Credentials(staticCredentials),
+		s3conf.BucketRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &s3BackupStorage{bucket, logex.Levels(logger)}, nil
 }
 
 func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) error {
@@ -40,13 +59,8 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 		hostname,
 		backup.Target.TaskId)
 
-	s3Client, err := s.s3Client()
-	if err != nil {
-		return err
-	}
-
-	if _, err := s3Client.PutObject(&s3.PutObjectInput{
-		Bucket:      aws.String(s.conf.Bucket),
+	if _, err := s.bucket.S3.PutObject(&s3.PutObjectInput{
+		Bucket:      s.bucket.Name,
 		Key:         &s3key,
 		ContentType: aws.String("application/octet-stream"),
 		Body:        content,
@@ -58,13 +72,8 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 }
 
 func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
-	s3Client, err := s.s3Client()
-	if err != nil {
-		return nil, err
-	}
-
-	object, err := s3Client.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(s.conf.Bucket),
+	object, err := s.bucket.S3.GetObject(&s3.GetObjectInput{
+		Bucket: s.bucket.Name,
 		Key:    &id,
 	})
 	if err != nil {
@@ -77,13 +86,8 @@ func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
 var parseTimestampRe = regexp.MustCompile("^[^Z]+Z")
 
 func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
-	s3Client, err := s.s3Client()
-	if err != nil {
-		return nil, err
-	}
-
-	list, err := s3Client.ListObjects(&s3.ListObjectsInput{
-		Bucket: aws.String(s.conf.Bucket),
+	list, err := s.bucket.S3.ListObjects(&s3.ListObjectsInput{
+		Bucket: s.bucket.Name,
 		Prefix: aws.String(serviceId + "/"),
 	})
 	if err != nil {
@@ -118,11 +122,4 @@ func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
 	sort.Slice(backups, func(i, j int) bool { return backups[i].Timestamp.Before(backups[j].Timestamp) })
 
 	return backups, nil
-}
-
-func (s *s3BackupStorage) s3Client() (*s3.S3, error) {
-	return s3facade.Client(
-		s.conf.AccessKeyId,
-		s.conf.AccessKeySecret,
-		s.conf.BucketRegion)
 }
