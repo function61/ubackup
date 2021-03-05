@@ -13,10 +13,6 @@ import (
 	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
-const (
-	backupCommandEnvKey = "BACKUP_COMMAND"
-)
-
 // returns containers that have ENV var "BACKUP_COMMAND" defined
 func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint, nil, false)
@@ -38,6 +34,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		return nil, fmt.Errorf("Get containers: %v", err)
 	}
 
+	// we've to inspect all containers separately for their ENV vars
 	inspecteds, err := inspectAllContainers(ctx, containerMetaList, base, dockerClient)
 	if err != nil {
 		return nil, err
@@ -46,11 +43,13 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 	targets := []ubtypes.BackupTarget{}
 
 	for _, container := range inspecteds {
-		foundBackupCommand := ""
+		foundBackupCommand := container.Config.Labels["ubackup.command"]
 
+		// deprecated way of specifying backup command.
+		// once we can remove this, we don't have to inspect each container anymore (for ENV vars)
 		for _, envSerialized := range container.Config.Env {
 			key, value := envvar.Parse(envSerialized)
-			if key == backupCommandEnvKey {
+			if key == "BACKUP_COMMAND" {
 				foundBackupCommand = value
 			}
 		}
