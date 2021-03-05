@@ -36,7 +36,7 @@ Docker host, configure the Docker integration via µbackup config)
 +------------+     +-----------------------------+      +------------------------------+      +--------------+
 |            |     |                             |      |                              |      |              |
 | Once a day +-----> For each container:         +------> Compress & encrypt stdout    +------> Upload to S3 |
-|            |     | - if BACKUP_COMMAND defined |      | of BACKUP_COMMAND            |      |              |
+|            |     | - if backup command defined |      | of backup command            |      |              |
 +------------+     |                             |      |                              |      +--------------+
                    +-----------+-----^-----------+      +------------------------------+
                                |     |
@@ -44,35 +44,36 @@ Docker host, configure the Docker integration via µbackup config)
                                |     |
                  +-------------v-----+---------------+
                  |                                   |
-                 |  Execute BACKUP_COMMAND inside    |
+                 |  Execute backup command inside    |
                  |  the container, taking its stdout |
                  |  as the backup stream             |
                  |                                   |
                  +-----------------------------------+
 ```
 
-`BACKUP_COMMAND` is a container's ENV variable (specified during
-`$ docker run -e "BACKUP_COMMAND=..."` for example) that contains the command used to take
+`ubackup.command` is a container's label (specified during
+`$ docker run -l "ubackup.command=..."` for example) that contains the command used to take
 a backup of the important state inside the container.
 
-For different use cases, for `BACKUP_COMMAND` specify:
+For different use cases, for `ubackup.command` specify:
 
 - If you need to backup a single file inside a container
-  * Use: `BACKUP_COMMAND=cat /yourfile.db`
+  * Use: `cat /yourfile.db`
 
 - For databases etc. that support atomic dumping, e.g. PostgreSQL
-  * Use: `BACKUP_COMMAND=pg_dump -U postgres nameOfYourDatabase`
+  * Use: `pg_dump -U postgres nameOfYourDatabase`
 
 - For a directory
-  * Use: `BACKUP_COMMAND=tar -cC /yourdirectory -f - .`
+  * Use: `tar -cC /yourdirectory -f - .`
   * `-` means `$ tar` will write the archive to `stdout`, `.` just means to process all files in the
     selected directory).
 
-- If there's no tooling inside the container (think `FROM scratch`), if you have a Docker
+- If there's no tooling inside the container (think Dockerfile `FROM scratch`), if you have a Docker
   volume you want to archive in its entirety
-  * Use: `BACKUP_COMMAND=dockervolume://` and µbackup will find the volume source data via
-    Docker and use `tar` to dump the whole directory tree.
-  * For this option, you have to run µbackup with `$ docker run -v /var/lib/docker/volumes:/var/lib/docker/volumes`
+  * Use: `dockervolume://` and µbackup will find the volume source data via
+    Docker and use `$ tar` (from host-side) to dump the whole directory tree.
+  * For this option, if you run µbackup as a container you have to run µbackup with
+    `$ docker run -v /var/lib/docker/volumes:/var/lib/docker/volumes`
 
 This simple approach is surprisingly flexible and its streaming approach is more efficient
 than having to write temporary files.
