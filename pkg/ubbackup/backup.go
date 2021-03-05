@@ -73,7 +73,7 @@ func BackupAndStore(
 
 	uploadStartedAt := time.Now()
 
-	if err := storage.Put(backup, tempFile); err != nil {
+	if err := storage.Put(ctx, backup, tempFile); err != nil {
 		return err
 	}
 

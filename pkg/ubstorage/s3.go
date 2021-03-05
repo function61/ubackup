@@ -48,7 +48,7 @@ func NewS3BackupStorage(s3conf ubconfig.StorageS3Config, logger *log.Logger) (St
 	return &s3BackupStorage{bucket, logex.Levels(logger)}, nil
 }
 
-func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) error {
+func (s *s3BackupStorage) Put(ctx context.Context, backup ubtypes.Backup, content io.ReadSeeker) error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 		hostname,
 		backup.Target.TaskId)
 
-	if _, err := s.bucket.S3.PutObject(&s3.PutObjectInput{
+	if _, err := s.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:      s.bucket.Name,
 		Key:         &s3key,
 		ContentType: aws.String("application/octet-stream"),
@@ -74,8 +74,8 @@ func (s *s3BackupStorage) Put(backup ubtypes.Backup, content io.ReadSeeker) erro
 	return nil
 }
 
-func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
-	object, err := s.bucket.S3.GetObject(&s3.GetObjectInput{
+func (s *s3BackupStorage) Get(ctx context.Context, id string) (io.ReadCloser, error) {
+	object, err := s.bucket.S3.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: s.bucket.Name,
 		Key:    &id,
 	})
@@ -88,8 +88,8 @@ func (s *s3BackupStorage) Get(id string) (io.ReadCloser, error) {
 
 var parseTimestampRe = regexp.MustCompile("^[^Z]+Z")
 
-func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
-	list, err := s.bucket.S3.ListObjects(&s3.ListObjectsInput{
+func (s *s3BackupStorage) List(ctx context.Context, serviceId string) ([]StoredBackup, error) {
+	list, err := s.bucket.S3.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
 		Bucket: s.bucket.Name,
 		Prefix: aws.String(serviceId + "/"),
 	})

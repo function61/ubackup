@@ -24,7 +24,7 @@ func storageEntry() *cobra.Command {
 		Short: "Get backup from storage",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func(id string) error {
+			osutil.ExitIfError(func(ctx context.Context, id string) error {
 				conf, err := ubconfig.ReadFromEnvOrFile()
 				if err != nil {
 					return err
@@ -35,7 +35,7 @@ func storageEntry() *cobra.Command {
 					return err
 				}
 
-				body, err := storage.Get(id)
+				body, err := storage.Get(ctx, id)
 				if err != nil {
 					return err
 				}
@@ -43,7 +43,7 @@ func storageEntry() *cobra.Command {
 
 				_, err = io.Copy(os.Stdout, body)
 				return err
-			}(args[0]))
+			}(osutil.CancelOnInterruptOrTerminate(nil), args[0]))
 		},
 	})
 
@@ -52,7 +52,7 @@ func storageEntry() *cobra.Command {
 		Short: "List backups from storage for a service",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func(serviceId string) error {
+			osutil.ExitIfError(func(ctx context.Context, serviceId string) error {
 				conf, err := ubconfig.ReadFromEnvOrFile()
 				if err != nil {
 					return err
@@ -63,7 +63,7 @@ func storageEntry() *cobra.Command {
 					return err
 				}
 
-				backups, err := storage.List(serviceId)
+				backups, err := storage.List(ctx, serviceId)
 				if err != nil {
 					return err
 				}
@@ -73,7 +73,7 @@ func storageEntry() *cobra.Command {
 				}
 
 				return nil
-			}(args[0]))
+			}(osutil.CancelOnInterruptOrTerminate(nil), args[0]))
 		},
 	})
 
@@ -82,7 +82,7 @@ func storageEntry() *cobra.Command {
 		Short: "List services that have backups",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(func() error {
+			osutil.ExitIfError(func(ctx context.Context) error {
 				conf, err := ubconfig.ReadFromEnvOrFile()
 				if err != nil {
 					return err
@@ -93,7 +93,7 @@ func storageEntry() *cobra.Command {
 					return err
 				}
 
-				services, err := storage.ListServices(context.Background())
+				services, err := storage.ListServices(ctx)
 				if err != nil {
 					return err
 				}
@@ -103,7 +103,7 @@ func storageEntry() *cobra.Command {
 				}
 
 				return nil
-			}())
+			}(osutil.CancelOnInterruptOrTerminate(nil)))
 		},
 	})
 
