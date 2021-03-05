@@ -56,11 +56,12 @@ func (s *s3BackupStorage) Put(ctx context.Context, backup ubtypes.Backup, conten
 
 	// <SERVICE_NAME>/<TIME>_<HOSTNAME>_<TASK_ID>.gz.aes
 	s3key := fmt.Sprintf(
-		"%s/%s_%s_%s.gz.aes",
+		"%s/%s_%s_%s%s.gz.aes",
 		backup.Target.ServiceName,
 		backup.Started.UTC().Format(dateFormat),
 		hostname,
-		backup.Target.TaskId)
+		backup.Target.TaskId,
+		backup.Target.FileExtension)
 
 	if _, err := s.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:      s.bucket.Name,
@@ -138,6 +139,7 @@ func (s *s3BackupStorage) ListServices(ctx context.Context) ([]string, error) {
 	}
 
 	services := []string{}
+	// CommonPrefixes identifies the virtual directories for our request
 	for _, item := range list.CommonPrefixes {
 		services = append(services, strings.TrimRight(*item.Prefix, "/"))
 	}

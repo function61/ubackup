@@ -69,9 +69,10 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		}
 
 		targets = append(targets, ubtypes.BackupTarget{
-			ServiceName: serviceName,
-			TaskId:      dockerShortenContainerId(container), // for shorter backup filenames
-			Snapshotter: snapshotter,
+			ServiceName:   serviceName,
+			TaskId:        dockerShortenContainerId(container), // for shorter backup filenames
+			Snapshotter:   snapshotter,
+			FileExtension: container.Config.Labels["ubackup.file_extension"], // ok if not set
 		})
 	}
 
