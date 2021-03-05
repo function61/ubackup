@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -73,6 +74,36 @@ func storageEntry() *cobra.Command {
 
 				return nil
 			}(args[0]))
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "ls-services",
+		Short: "List services that have backups",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			osutil.ExitIfError(func() error {
+				conf, err := ubconfig.ReadFromEnvOrFile()
+				if err != nil {
+					return err
+				}
+
+				storage, err := ubstorage.StorageFromConfig(conf.Storage, logex.StandardLogger())
+				if err != nil {
+					return err
+				}
+
+				services, err := storage.ListServices(context.Background())
+				if err != nil {
+					return err
+				}
+
+				for _, service := range services {
+					fmt.Println(service)
+				}
+
+				return nil
+			}())
 		},
 	})
 

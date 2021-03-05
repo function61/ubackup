@@ -1,6 +1,7 @@
 package ubstorage
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -123,4 +125,22 @@ func (s *s3BackupStorage) List(serviceId string) ([]StoredBackup, error) {
 	sort.Slice(backups, func(i, j int) bool { return backups[i].Timestamp.Before(backups[j].Timestamp) })
 
 	return backups, nil
+}
+
+func (s *s3BackupStorage) ListServices(ctx context.Context) ([]string, error) {
+	list, err := s.bucket.S3.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
+		Bucket:    s.bucket.Name,
+		Prefix:    aws.String(""),
+		Delimiter: aws.String("/"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	services := []string{}
+	for _, item := range list.CommonPrefixes {
+		services = append(services, strings.TrimRight(*item.Prefix, "/"))
+	}
+
+	return services, nil
 }

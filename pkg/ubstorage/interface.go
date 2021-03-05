@@ -1,6 +1,7 @@
 package ubstorage
 
 import (
+	"context"
 	"io"
 	"time"
 
@@ -16,6 +17,7 @@ type StoredBackup struct {
 
 type Storage interface {
 	Put(backup ubtypes.Backup, content io.ReadSeeker) error
-	List(serviceId string) ([]StoredBackup, error)
 	Get(id string) (io.ReadCloser, error)
+	List(serviceId string) ([]StoredBackup, error)
+	ListServices(context.Context) ([]string, error)
 }
