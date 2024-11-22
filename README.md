@@ -2,6 +2,8 @@
 [![Download](https://img.shields.io/github/downloads/function61/ubackup/total.svg?style=for-the-badge)](https://github.com/function61/ubackup/releases)
 [![Download](https://img.shields.io/docker/pulls/fn61/ubackup.svg?style=for-the-badge)](https://hub.docker.com/r/fn61/ubackup/)
 
+![](docs/logo.webp)
+
 µbackup is a program/library/Docker image for taking backups of your Docker containers (or
 traditional applications) 100 % automatically, properly encrypting and uploading them to S3.
 
