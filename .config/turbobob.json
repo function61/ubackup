@@ -6,33 +6,18 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20210208_0951_8496e47f",
+			"uses": "docker://fn61/buildkit-golang:20260604_1344_ff654e98",
 			"mount_destination": "/workspace",
 			"workdir": "/workspace",
 			"commands": {
-				"build": ["bin/build.sh"],
+				"build": ["build-go-project.sh", "--directory=cmd/ubackup/", "--binary-basename=ubackup"],
 				"dev": ["bash"]
 			}
-		},
-		{
-			"name": "publisher",
-			"uses": "docker://fn61/buildkit-publisher:20200228_1755_83c203ff",
-			"mount_destination": "/workspace",
-			"commands": {
-				"publish": ["publish-gh.sh", "function61/ubackup", "rel/"],
-				"dev": ["bash"]
-			},
-			"pass_envs": [
-				"GITHUB_TOKEN",
-				"EVENTHORIZON"
-			]
 		}
 	],
 	"docker_images": [
 		{
-			"image": "fn61/ubackup",
-			"dockerfile_path": "Dockerfile",
-			"auth_type": "creds_from_env"
+			"image": "fn61/ubackup"
 		}
 	],
 	"os_arches": {
