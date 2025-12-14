@@ -6,8 +6,8 @@ import (
 	"compress/gzip"
 	"io"
 
-	"github.com/function61/gokit/cryptoutil"
-	"github.com/function61/gokit/pkencryptedstream"
+	"github.com/function61/gokit/crypto/cryptoutil"
+	"github.com/function61/gokit/crypto/pkencryptedstream"
 )
 
 type encryptorAndCompressor struct {

@@ -3,8 +3,8 @@ package ubconfig
 import (
 	"bytes"
 
-	"github.com/function61/gokit/envvar"
-	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/gokit/encoding/jsonfile"
+	"github.com/function61/gokit/os/osutil"
 )
 
 type Config struct {
@@ -37,10 +37,10 @@ type AlertManagerConfig struct {
 
 func ReadFromEnvOrFile() (*Config, error) {
 	conf := &Config{}
-	confFromEnv, err := envvar.RequiredFromBase64Encoded("UBACKUP_CONF")
+	confFromEnv, err := osutil.GetenvRequiredFromBase64("UBACKUP_CONF")
 	if err == nil { // FIXME: this swallows invalid base64 syntax error
-		return conf, jsonfile.Unmarshal(bytes.NewBuffer(confFromEnv), conf, true)
+		return conf, jsonfile.UnmarshalDisallowUnknownFields(bytes.NewBuffer(confFromEnv), conf)
 	} else {
-		return conf, jsonfile.Read("config.json", conf, true)
+		return conf, jsonfile.ReadDisallowUnknownFields("config.json", conf)
 	}
 }

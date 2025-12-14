@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/function61/gokit/dynversion"
-	"github.com/function61/gokit/jsonfile"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/osutil"
+	"github.com/function61/gokit/app/dynversion"
+	"github.com/function61/gokit/encoding/jsonfile"
+	"github.com/function61/gokit/log/logex"
+	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
@@ -113,7 +113,7 @@ func configValidateEntry() *cobra.Command {
 		Short: "Validates your config file (from stdin)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(jsonfile.Unmarshal(os.Stdin, &ubconfig.Config{}, true))
+			osutil.ExitIfError(jsonfile.UnmarshalDisallowUnknownFields(os.Stdin, &ubconfig.Config{}))
 		},
 	}
 }

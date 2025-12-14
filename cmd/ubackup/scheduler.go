@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/function61/gokit/dynversion"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/osutil"
-	"github.com/function61/gokit/systemdinstaller"
+	"github.com/function61/gokit/app/dynversion"
+	"github.com/function61/gokit/log/logex"
+	"github.com/function61/gokit/os/osutil"
+	"github.com/function61/gokit/os/systemdinstaller"
 	"github.com/spf13/cobra"
 )
 
@@ -92,7 +92,7 @@ func schedulerEntry() *cobra.Command {
 		Short: "Install scheduled backups as a system service",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			service := systemdinstaller.SystemdServiceFile(
+			service := systemdinstaller.Service(
 				"ubackup",
 				"µbackup",
 				systemdinstaller.Args("scheduler", "run"),
@@ -100,7 +100,7 @@ func schedulerEntry() *cobra.Command {
 
 			osutil.ExitIfError(systemdinstaller.Install(service))
 
-			fmt.Println(systemdinstaller.GetHints(service))
+			fmt.Println(systemdinstaller.EnableAndStartCommandHints(service))
 		},
 	})
 

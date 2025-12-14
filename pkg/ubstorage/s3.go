@@ -16,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/function61/gokit/aws/s3facade"
-	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/app/aws/s3facade"
+	"github.com/function61/gokit/log/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 )

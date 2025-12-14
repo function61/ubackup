@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
 
-	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/log/logex"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubstorage"
@@ -30,7 +29,7 @@ func BackupAndStore(
 	logl.Debug.Printf("snapshotter: %s", backup.Target.Snapshotter.Describe())
 
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
-	tempFile, err := ioutil.TempFile("", "ubackup")
+	tempFile, err := os.CreateTemp("", "ubackup")
 	if err != nil {
 		return err
 	}

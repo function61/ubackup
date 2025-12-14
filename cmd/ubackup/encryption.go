@@ -5,11 +5,10 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"io"
-	"io/ioutil"
 	"os"
 
-	"github.com/function61/gokit/cryptoutil"
-	"github.com/function61/gokit/osutil"
+	"github.com/function61/gokit/crypto/cryptoutil"
+	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
 )
@@ -55,7 +54,7 @@ func decryptionKeyToEncryptionKey(privKeyPemReader io.Reader, pubKeyOut io.Write
 
 func decryptEntry() *cobra.Command {
 	decryptAndDecompress := func(pathToPrivateKey string, input io.Reader, output io.Writer) error {
-		privateKeyFile, err := ioutil.ReadFile(pathToPrivateKey)
+		privateKeyFile, err := os.ReadFile(pathToPrivateKey)
 		if err != nil {
 			return err
 		}

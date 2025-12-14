@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/function61/gokit/envvar"
-	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/gokit/udocker"
+	"github.com/function61/gokit/app/udocker"
+	"github.com/function61/gokit/net/http/ezhttp"
+	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
@@ -29,7 +29,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		reqCtx,
 		base+udocker.ListContainersEndpoint,
 		ezhttp.Client(dockerClient),
-		ezhttp.RespondsJson(&containerMetaList, true))
+		ezhttp.RespondsJSONAllowUnknownFields(&containerMetaList))
 	if err != nil {
 		return nil, fmt.Errorf("Get containers: %v", err)
 	}
@@ -48,7 +48,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		// deprecated way of specifying backup command.
 		// once we can remove this, we don't have to inspect each container anymore (for ENV vars)
 		for _, envSerialized := range container.Config.Env {
-			key, value := envvar.Parse(envSerialized)
+			key, value := osutil.ParseEnv(envSerialized)
 			if key == "BACKUP_COMMAND" {
 				foundBackupCommand = value
 			}
@@ -134,7 +134,7 @@ func inspectAllContainers(
 			reqCtx,
 			base+udocker.ContainerInspectEndpoint(meta.Id),
 			ezhttp.Client(dockerClient),
-			ezhttp.RespondsJson(&container, true)); err != nil {
+			ezhttp.RespondsJSONAllowUnknownFields(&container)); err != nil {
 			cancel()
 			return nil, err
 		}
