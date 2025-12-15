@@ -1,56 +1,13 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
 	"io"
 	"os"
 
-	"github.com/function61/gokit/crypto/cryptoutil"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/spf13/cobra"
 )
-
-func decryptionKeyGenerate(out io.Writer) error {
-	// using 4096 to be super safe, though 2048 seems to be what's currently used
-	privKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return err
-	}
-
-	privKeyBytes := cryptoutil.MarshalPemBytes(
-		x509.MarshalPKCS1PrivateKey(privKey),
-		cryptoutil.PemTypeRsaPrivateKey)
-
-	if _, err := out.Write(privKeyBytes); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func decryptionKeyToEncryptionKey(privKeyPemReader io.Reader, pubKeyOut io.Writer) error {
-	privKeyPem, err := ioutil.ReadAll(privKeyPemReader)
-	if err != nil {
-		return err
-	}
-
-	privKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(privKeyPem)
-	if err != nil {
-		return err
-	}
-
-	if _, err := pubKeyOut.Write(cryptoutil.MarshalPemBytes(
-		x509.MarshalPKCS1PublicKey(&privKey.PublicKey),
-		cryptoutil.PemTypeRsaPublicKey),
-	); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func decryptEntry() *cobra.Command {
 	decryptAndDecompress := func(pathToPrivateKey string, input io.Reader, output io.Writer) error {
@@ -67,7 +24,6 @@ func decryptEntry() *cobra.Command {
 		}
 
 		_, err = io.Copy(output, plaintextDecompressed)
-
 		return err
 	}
 
@@ -84,10 +40,10 @@ func decryptEntry() *cobra.Command {
 func decryptionKeyGenerateEntry() *cobra.Command {
 	return &cobra.Command{
 		Use:   "decryption-key-generate",
-		Short: "Generate RSA private key for backup decryption",
+		Short: "Generate private key for backup decryption",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(decryptionKeyGenerate(os.Stdout))
+			osutil.ExitIfError(backupfile.DecryptionKeyGenerate(os.Stdout))
 		},
 	}
 }
@@ -98,7 +54,7 @@ func decryptionKeyToEncryptionKeyEntry() *cobra.Command {
 		Short: "Prints encryption key (= public key) of decryption key (= private key)",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(decryptionKeyToEncryptionKey(os.Stdin, os.Stdout))
+			osutil.ExitIfError(backupfile.DecryptionKeyToEncryptionKey(os.Stdin, os.Stdout))
 		},
 	}
 }

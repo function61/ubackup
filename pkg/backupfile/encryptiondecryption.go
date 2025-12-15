@@ -1,13 +1,12 @@
-// File format for ubackup. Basically just: pkencryptedstream(gzip(plaintext))
-// pkencryptedstream is aesKeyEnvelope(rsaOaep(aesKey, pubKey)) + iv + aesCtr(plaintextGzipped)
+// File format for ubackup. Basically just: `ageEncrypt(gzip(plaintext))`
 package backupfile
 
 import (
 	"compress/gzip"
 	"io"
+	"strings"
 
-	"github.com/function61/gokit/crypto/cryptoutil"
-	"github.com/function61/gokit/crypto/pkencryptedstream"
+	"filippo.io/age"
 )
 
 type encryptorAndCompressor struct {
@@ -31,13 +30,13 @@ func (f *encryptorAndCompressor) Close() error {
 
 // you need to call .Close() on the returned WriteCloser for the gzip header and encryption
 // process to finish gracefully
-func CreateEncryptorAndCompressor(rsaPublicKeyPemPkcs1 string, sink io.Writer) (io.WriteCloser, error) {
-	publicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey([]byte(rsaPublicKeyPemPkcs1))
+func CreateEncryptorAndCompressor(ageRecipients string, sink io.Writer) (io.WriteCloser, error) {
+	recipients, err := age.ParseRecipients(strings.NewReader(ageRecipients))
 	if err != nil {
 		return nil, err
 	}
 
-	encryptedWriter, err := pkencryptedstream.Writer(sink, publicKey)
+	encryptedWriter, err := age.Encrypt(sink, recipients...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,13 +44,13 @@ func CreateEncryptorAndCompressor(rsaPublicKeyPemPkcs1 string, sink io.Writer) (
 	return &encryptorAndCompressor{encryptedWriter, gzip.NewWriter(encryptedWriter)}, nil
 }
 
-func CreateDecryptorAndDecompressor(rsaPrivateKeyPemPkcs1 string, ciphertextAndCompressedInput io.Reader) (io.Reader, error) {
-	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey([]byte(rsaPrivateKeyPemPkcs1))
+func CreateDecryptorAndDecompressor(ageIdentities string, ciphertextAndCompressedInput io.Reader) (io.Reader, error) {
+	identities, err := age.ParseIdentities(strings.NewReader(ageIdentities))
 	if err != nil {
 		return nil, err
 	}
 
-	compressedPlaintextReader, err := pkencryptedstream.Reader(ciphertextAndCompressedInput, privateKey)
+	compressedPlaintextReader, err := age.Decrypt(ciphertextAndCompressedInput, identities...)
 	if err != nil {
 		return nil, err
 	}

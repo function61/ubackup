@@ -54,9 +54,9 @@ func (s *s3BackupStorage) Put(ctx context.Context, backup ubtypes.Backup, conten
 		return err
 	}
 
-	// <SERVICE_NAME>/<TIME>_<HOSTNAME>_<TASK_ID>.gz.aes
+	// <SERVICE_NAME>/<TIME>_<HOSTNAME>_<TASK_ID>.gz.age
 	s3key := fmt.Sprintf(
-		"%s/%s_%s_%s%s.gz.aes",
+		"%s/%s_%s_%s%s.gz.age",
 		backup.Target.ServiceName,
 		backup.Started.UTC().Format(dateFormat),
 		hostname,
