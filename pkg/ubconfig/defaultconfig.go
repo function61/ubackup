@@ -1,7 +1,7 @@
 package ubconfig
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
@@ -10,7 +10,7 @@ func DefaultConfig(pubkeyFilePath string, kitchenSink bool) *Config {
 	publicKeyContent := ""
 
 	if pubkeyFilePath != "" {
-		content, err := ioutil.ReadFile(pubkeyFilePath)
+		content, err := os.ReadFile(pubkeyFilePath)
 		if err != nil {
 			panic(err)
 		}
@@ -37,7 +37,7 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 		})
 
 		alertManager = &AlertManagerConfig{
-			BaseUrl: "https://example.com/url-to-my/alertmanager",
+			BaseURL: "https://example.com/url-to-my/alertmanager",
 		}
 	}
 
@@ -48,7 +48,7 @@ MIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo...
 			S3: &StorageS3Config{
 				Bucket:          "mybucket",
 				BucketRegion:    endpoints.UsEast1RegionID,
-				AccessKeyId:     "AKIAUZHTE3U35WCD5...",
+				AccessKeyID:     "AKIAUZHTE3U35WCD5...",
 				AccessKeySecret: "wXQJhB...",
 			},
 		},

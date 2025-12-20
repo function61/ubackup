@@ -20,7 +20,7 @@ type Backup struct {
 type BackupTarget struct {
 	ServiceName   string // storage is partitioned by service name
 	Snapshotter   Snapshotter
-	TaskId        string // instance/container/... ID to discern multiple replicas or process lifecycles if needed
+	TaskID        string // instance/container/... ID to discern multiple replicas or process lifecycles if needed
 	FileExtension string // ".sql" | ".tar" etc to identify what's inside compression+encryption wrapping
 }
 

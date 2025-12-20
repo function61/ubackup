@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
-	"github.com/function61/gokit/log/logex"
 	"github.com/function61/ubackup/pkg/backupfile"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubstorage"
@@ -16,17 +15,10 @@ import (
 )
 
 // takes backup from one target, encrypting it and storing it in storage specified in Config
-func BackupAndStore(
-	ctx context.Context,
-	backup ubtypes.Backup,
-	conf ubconfig.Config,
-	logger *log.Logger,
-) error {
-	logl := logex.Levels(logex.Prefix(backup.Target.ServiceName, logger))
+func BackupAndStore(ctx context.Context, backup ubtypes.Backup, conf ubconfig.Config, logger *slog.Logger) error {
+	logl := logger.With("serviceName", backup.Target.ServiceName)
 
-	logl.Info.Printf("starting (%s)", backup.Target.TaskId)
-
-	logl.Debug.Printf("snapshotter: %s", backup.Target.Snapshotter.Describe())
+	logl.Info("starting", "taskID", backup.Target.TaskID, "snapshotter", backup.Target.Snapshotter.Describe())
 
 	// we've to create a temp file because some storages (I'm looking at you, S3) need a seekable reader
 	tempFile, err := os.CreateTemp("", "ubackup")
@@ -36,7 +28,7 @@ func BackupAndStore(
 	defer func() {
 		// remove backup archive after upload
 		if err := os.Remove(tempFile.Name()); err != nil {
-			logl.Error.Printf("error cleaning up backup tempfile: %v", err)
+			logl.Error("error cleaning up backup tempfile", "err", err)
 		}
 	}()
 	defer tempFile.Close()
@@ -63,12 +55,12 @@ func BackupAndStore(
 		return err
 	}
 
-	storage, err := ubstorage.StorageFromConfig(conf.Storage, logger)
+	storage, err := ubstorage.StorageFromConfig(conf.Storage)
 	if err != nil {
 		return err
 	}
 
-	logl.Debug.Printf("snapshot completed in %s; starting upload", time.Since(snapshotStartedAt))
+	logl.Debug("snapshot completed; starting upload", "duration", time.Since(snapshotStartedAt))
 
 	uploadStartedAt := time.Now()
 
@@ -76,7 +68,7 @@ func BackupAndStore(
 		return err
 	}
 
-	logl.Debug.Printf("upload completed in %s", time.Since(uploadStartedAt))
+	logl.Debug("upload completed", "duration", time.Since(uploadStartedAt))
 
 	return nil
 }

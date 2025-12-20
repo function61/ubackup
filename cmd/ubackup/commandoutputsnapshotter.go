@@ -23,6 +23,7 @@ func (c *commandOutputSnapshotter) Describe() string {
 }
 
 func (c *commandOutputSnapshotter) CreateSnapshot(backupSink io.Writer) error {
+	//nolint:gosec // ok
 	command := exec.Command(c.command[0], c.command[1:]...)
 	command.Dir = c.dir // if empty, current workdir will be used
 	command.Stderr = os.Stderr

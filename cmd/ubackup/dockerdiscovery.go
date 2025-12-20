@@ -31,7 +31,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 		ezhttp.Client(dockerClient),
 		ezhttp.RespondsJSONAllowUnknownFields(&containerMetaList))
 	if err != nil {
-		return nil, fmt.Errorf("Get containers: %v", err)
+		return nil, fmt.Errorf("get containers: %v", err)
 	}
 
 	// we've to inspect all containers separately for their ENV vars
@@ -70,7 +70,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 
 		targets = append(targets, ubtypes.BackupTarget{
 			ServiceName:   serviceName,
-			TaskId:        dockerShortenContainerId(container), // for shorter backup filenames
+			TaskID:        dockerShortenContainerID(container), // for shorter backup filenames
 			Snapshotter:   snapshotter,
 			FileExtension: container.Config.Labels["ubackup.file_extension"], // ok if not set
 		})
@@ -113,7 +113,7 @@ func createSnapshotter(
 	dockerExecCmd := append([]string{
 		"docker",
 		"exec",
-		dockerShortenContainerId(container), // for less verbose log messages
+		dockerShortenContainerID(container), // for less verbose log messages
 	}, backupCommandParts...)
 
 	return newCommandOutputSnapshotter(dockerExecCmd, "")
@@ -146,7 +146,7 @@ func inspectAllContainers(
 	return containers, nil
 }
 
-func dockerShortenContainerId(container udocker.Container) string {
+func dockerShortenContainerID(container udocker.Container) string {
 	// Docker CLI truncates ids to this long
 	return container.Id[0:12]
 }

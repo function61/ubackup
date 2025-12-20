@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package main
 
@@ -9,7 +8,7 @@ import (
 
 const SupportsSettingPriorities = true
 
-func SetLowCpuPriority() error {
+func SetLowCPUPriority() error {
 	// pid 0 means self
 	return syscall.Setpriority(syscall.PRIO_PROCESS, 0, 19)
 }

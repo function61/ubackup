@@ -3,9 +3,8 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 
-	"github.com/function61/gokit/log/logex"
 	// "github.com/function61/lambda-alertmanager/pkg/alertmanagerclient"
 
 	"github.com/function61/ubackup/pkg/ubbackup"
@@ -13,8 +12,8 @@ import (
 	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
-func runBackup(ctx context.Context, logger *log.Logger) error {
-	logl := logex.Levels(logger)
+func runBackup(ctx context.Context) error {
+	logger := slog.Default()
 
 	// alertSubjects, err := newAlertSubjects()
 	// if err != nil {
@@ -36,7 +35,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	// }
 
 	if SupportsSettingPriorities {
-		if err := SetLowCpuPriority(); err != nil {
+		if err := SetLowCPUPriority(); err != nil {
 			return err
 		}
 	}
@@ -44,7 +43,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 	targets := []ubtypes.BackupTarget{}
 
 	if conf.DockerEndpoint != nil {
-		logl.Debug.Println("starting Docker discovery")
+		logger.Debug("starting Docker discovery")
 
 		containerTargets, err := dockerDiscoverBackupTargets(ctx, *conf.DockerEndpoint)
 		if err != nil {
@@ -74,7 +73,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		); err != nil {
 			failedBackups++
 
-			logl.Error.Printf("%s: %v", target.ServiceName, err)
+			logger.Error("BackupAndStore", "serviceName", target.ServiceName, "err", err)
 
 			// raise an alert
 			// if alertManagerClient != nil {
@@ -111,7 +110,7 @@ func runBackup(ctx context.Context, logger *log.Logger) error {
 		return errors.New("some (or all) backups failed")
 	}
 
-	logl.Info.Println("completed succesfully")
+	logger.Info("completed succesfully")
 
 	return nil
 }

@@ -1,5 +1,4 @@
 //go:build !linux
-// +build !linux
 
 package main
 
@@ -9,6 +8,6 @@ import (
 
 const SupportsSettingPriorities = false
 
-func SetLowCpuPriority() error {
+func SetLowCPUPriority() error {
 	return errors.New("not implemented")
 }

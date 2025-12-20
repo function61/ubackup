@@ -18,6 +18,6 @@ type StoredBackup struct {
 type Storage interface {
 	Put(ctx context.Context, backup ubtypes.Backup, content io.ReadSeeker) error
 	Get(ctx context.Context, id string) (io.ReadCloser, error)
-	List(ctx context.Context, serviceId string) ([]StoredBackup, error)
+	List(ctx context.Context, serviceID string) ([]StoredBackup, error)
 	ListServices(context.Context) ([]string, error)
 }

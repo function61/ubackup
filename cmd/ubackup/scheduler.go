@@ -3,23 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/function61/gokit/app/dynversion"
-	"github.com/function61/gokit/log/logex"
-	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/gokit/os/systemdinstaller"
 	"github.com/spf13/cobra"
 )
 
 // backupTime should return error not if individual backup fails, but if its error is so
 // fatal that we should stop altogether
-func runScheduler(ctx context.Context, backupTime func() error, logger *log.Logger) error {
-	logl := logex.Levels(logger)
-
-	logl.Info.Println("started")
-	defer logl.Info.Println("stopped")
+func runScheduler(ctx context.Context, backupTime func() error, logger *slog.Logger) error {
+	logger.Info("started")
+	defer logger.Info("stopped")
 
 	canceled := ctx.Done()
 
@@ -27,23 +23,15 @@ func runScheduler(ctx context.Context, backupTime func() error, logger *log.Logg
 		now := time.Now()
 
 		// wake up at 01:00 UTC of next day
-		next := time.Date(
-			now.Year(),
-			now.Month(),
-			now.Day()+1,
-			1,
-			0,
-			0,
-			0,
-			time.UTC)
+		next := time.Date(now.Year(), now.Month(), now.Day()+1, 1, 0, 0, 0, time.UTC)
 
-		logl.Info.Printf("next backup will be at: %s", next.Format(time.RFC3339))
+		logger.Info("next backup will be", "at", next.Format(time.RFC3339))
 
 		select {
 		case <-canceled:
 			return nil
 		case <-time.After(next.Sub(now)):
-			logl.Info.Println("it's backup time!")
+			logger.Info("it's backup time!")
 
 			if err := backupTime(); err != nil {
 				return err
@@ -62,28 +50,21 @@ func schedulerEntry() *cobra.Command {
 		Use:   "run",
 		Short: "Run a scheduler to periodically take backups",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := logex.StandardLogger()
-			mainLogger := logex.Prefix("main", rootLogger)
-			logl := logex.Levels(mainLogger)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 
-			ctx := osutil.CancelOnInterruptOrTerminate(mainLogger)
-
-			logl.Info.Printf("Started %s", dynversion.Version)
+			slog.Info("started", "version", dynversion.Version)
 
 			// this gets ran once per day
 			backupTime := func() error {
-				if err := runBackup(ctx, rootLogger); err != nil {
-					logl.Error.Println(err.Error())
+				if err := runBackup(ctx); err != nil {
+					slog.Error("runBackup", "err", err.Error())
 				}
 
 				return nil
 			}
 
-			osutil.ExitIfError(runScheduler(
-				ctx,
-				backupTime,
-				logex.Prefix("scheduler", rootLogger)))
+			return runScheduler(ctx, backupTime, slog.With("subsystem", "scheduler"))
 		},
 	})
 
@@ -91,16 +72,19 @@ func schedulerEntry() *cobra.Command {
 		Use:   "install-systemd-service-file",
 		Short: "Install scheduled backups as a system service",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			service := systemdinstaller.Service(
 				"ubackup",
 				"µbackup",
 				systemdinstaller.Args("scheduler", "run"),
 				systemdinstaller.Docs("https://function61.com/"))
 
-			osutil.ExitIfError(systemdinstaller.Install(service))
+			if err := systemdinstaller.Install(service); err != nil {
+				return err
+			}
 
 			fmt.Println(systemdinstaller.EnableAndStartCommandHints(service))
+			return nil
 		},
 	})
 

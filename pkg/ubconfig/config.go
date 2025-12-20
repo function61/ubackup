@@ -27,12 +27,12 @@ type StorageConfig struct {
 type StorageS3Config struct {
 	Bucket          string `json:"bucket"`
 	BucketRegion    string `json:"bucket_region"`
-	AccessKeyId     string `json:"access_key_id"`
+	AccessKeyID     string `json:"access_key_id"`
 	AccessKeySecret string `json:"access_key_secret"`
 }
 
 type AlertManagerConfig struct {
-	BaseUrl string `json:"baseurl"`
+	BaseURL string `json:"baseurl"`
 }
 
 func ReadFromEnvOrFile() (*Config, error) {

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/app/aws/s3facade"
-	"github.com/function61/gokit/log/logex"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
 )
@@ -28,12 +26,11 @@ const (
 
 type s3BackupStorage struct {
 	bucket *s3facade.BucketContext
-	logl   *logex.Leveled
 }
 
-func NewS3BackupStorage(s3conf ubconfig.StorageS3Config, logger *log.Logger) (Storage, error) {
+func NewS3BackupStorage(s3conf ubconfig.StorageS3Config) (Storage, error) {
 	staticCredentials := credentials.NewStaticCredentials(
-		s3conf.AccessKeyId,
+		s3conf.AccessKeyID,
 		s3conf.AccessKeySecret,
 		"")
 
@@ -45,7 +42,7 @@ func NewS3BackupStorage(s3conf ubconfig.StorageS3Config, logger *log.Logger) (St
 		return nil, err
 	}
 
-	return &s3BackupStorage{bucket, logex.Levels(logger)}, nil
+	return &s3BackupStorage{bucket}, nil
 }
 
 func (s *s3BackupStorage) Put(ctx context.Context, backup ubtypes.Backup, content io.ReadSeeker) error {
@@ -60,7 +57,7 @@ func (s *s3BackupStorage) Put(ctx context.Context, backup ubtypes.Backup, conten
 		backup.Target.ServiceName,
 		backup.Started.UTC().Format(dateFormat),
 		hostname,
-		backup.Target.TaskId,
+		backup.Target.TaskID,
 		backup.Target.FileExtension)
 
 	if _, err := s.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
@@ -89,10 +86,10 @@ func (s *s3BackupStorage) Get(ctx context.Context, id string) (io.ReadCloser, er
 
 var parseTimestampRe = regexp.MustCompile("^[^Z]+Z")
 
-func (s *s3BackupStorage) List(ctx context.Context, serviceId string) ([]StoredBackup, error) {
+func (s *s3BackupStorage) List(ctx context.Context, serviceID string) ([]StoredBackup, error) {
 	list, err := s.bucket.S3.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
 		Bucket: s.bucket.Name,
-		Prefix: aws.String(serviceId + "/"),
+		Prefix: aws.String(serviceID + "/"),
 	})
 	if err != nil {
 		return nil, err

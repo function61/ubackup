@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 
-	"github.com/function61/gokit/app/dynversion"
+	"github.com/function61/gokit/app/cli"
 	"github.com/function61/gokit/encoding/jsonfile"
-	"github.com/function61/gokit/log/logex"
-	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/ubackup/pkg/ubtypes"
@@ -18,22 +16,15 @@ import (
 
 func main() {
 	app := &cobra.Command{
-		Use:     os.Args[0],
-		Short:   "Backs up your stateful containers",
-		Version: dynversion.Version,
+		Short: "Backs up your stateful containers",
 	}
 
 	app.AddCommand(&cobra.Command{
 		Use:   "now",
 		Short: "Takes a backup now",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := logex.StandardLogger()
-
-			osutil.ExitIfError(runBackup(
-				osutil.CancelOnInterruptOrTerminate(logex.Prefix("main", rootLogger)),
-				rootLogger,
-			))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runBackup(cmd.Context())
 		},
 	})
 
@@ -45,60 +36,48 @@ func main() {
 	app.AddCommand(decryptionKeyGenerateEntry())
 	app.AddCommand(decryptionKeyToEncryptionKeyEntry())
 
-	osutil.ExitIfError(app.Execute())
+	cli.Execute(app)
 }
 
 func manualEntry() *cobra.Command {
-	manual := func(ctx context.Context, serviceName string, taskId string, backupStream io.Reader, logger *log.Logger) error {
+	manual := func(ctx context.Context, serviceName string, taskID string, backupStream io.Reader, logger *slog.Logger) error {
 		conf, err := ubconfig.ReadFromEnvOrFile()
 		if err != nil {
 			return err
 		}
 
 		if SupportsSettingPriorities {
-			if err := SetLowCpuPriority(); err != nil {
+			if err := SetLowCPUPriority(); err != nil {
 				return err
 			}
 		}
 
 		backup := ubtypes.BackupTarget{
 			ServiceName: serviceName,
-			TaskId:      taskId,
+			TaskID:      taskID,
 			Snapshotter: ubtypes.CustomStream(func(backupSink io.Writer) error {
 				_, err := io.Copy(backupSink, backupStream)
 				return err
 			}),
 		}
 
-		return ubbackup.BackupAndStore(
-			ctx,
-			ubtypes.BackupForTarget(backup),
-			*conf,
-			logger)
+		return ubbackup.BackupAndStore(ctx, ubtypes.BackupForTarget(backup), *conf, logger)
 	}
 
 	return &cobra.Command{
 		Use:   "manual-backup [serviceName] [taskId]",
 		Short: "Compress+encrypt+upload one manual backup (from stdin)",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := logex.StandardLogger()
-
-			osutil.ExitIfError(manual(
-				osutil.CancelOnInterruptOrTerminate(rootLogger),
-				args[0],
-				args[1],
-				os.Stdin,
-				rootLogger))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return manual(cmd.Context(), args[0], args[1], os.Stdin, slog.Default())
 		},
 	}
 }
 
 func configEntry() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "config",
-		Short:   "Commands related to the configuration file",
-		Version: dynversion.Version,
+		Use:   "config",
+		Short: "Commands related to the configuration file",
 	}
 
 	cmd.AddCommand(configExampleEntry())
@@ -112,8 +91,8 @@ func configValidateEntry() *cobra.Command {
 		Use:   "validate",
 		Short: "Validates your config file (from stdin)",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(jsonfile.UnmarshalDisallowUnknownFields(os.Stdin, &ubconfig.Config{}))
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return jsonfile.UnmarshalDisallowUnknownFields(os.Stdin, &ubconfig.Config{})
 		},
 	}
 }
@@ -126,8 +105,8 @@ func configExampleEntry() *cobra.Command {
 		Use:   "example",
 		Short: "Shows you an example config file",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink)))
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return jsonfile.Marshal(os.Stdout, ubconfig.DefaultConfig(pubkeyFilePath, kitchenSink))
 		},
 	}
 
