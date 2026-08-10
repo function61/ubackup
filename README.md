@@ -7,7 +7,73 @@
 µbackup is a program/library/Docker image for taking backups of your Docker containers (or
 traditional applications) 100 % automatically, properly encrypting and uploading them to S3.
 
-![Diagram of µbackup](docs/diagram.png)
+```mermaid
+flowchart TD
+    %% Key generation / conceptual keypair
+    subgraph KP["Keypair — public-key cryptography"]
+        direction LR
+        DK["🔑 Decryption key"]
+        EK["🔑 Encryption key"]
+
+        DK -. "mathematically linked" .-> EK
+    end
+
+    %% Admin computer
+    subgraph ADMIN["Admin's computer"]
+        direction TB
+
+        GEN["Generate keypair<br/>(servers never know the decryption key)"]
+
+        ADK["🔑 Decryption key"]
+        ENC_BACKUP["🔒 Encrypted backup"]
+        DECRYPT["μbackup decrypt"]
+        CLEAR_BACKUP["🔓 Decrypted backup"]
+
+        ADK --> DECRYPT
+        ENC_BACKUP --> DECRYPT
+        DECRYPT --> CLEAR_BACKUP
+    end
+
+    %% Server
+    subgraph SERVER["Server"]
+        direction TB
+
+        SEK["🔑 Encryption key"]
+        SERVICES["Your services"]
+        BACKUP["μbackup"]
+
+        SEK --> BACKUP
+        SERVICES --> BACKUP
+    end
+
+    %% Cloud storage
+    subgraph CLOUD["Cloud storage"]
+        direction TB
+
+        CLOUD_DESC["Ransomware protected<br/>automatic purge of old backups"]
+
+        B125["🔒 Backup for day 125"]
+        BMID["🔒 Backup for day ..."]
+        B139["🔒 Backup for day 139"]
+
+        CLOUD_DESC --- B125
+        B125 --- BMID
+        BMID --- B139
+    end
+
+    %% Key generation / storage
+    GEN -. "generate" .-> DK
+    GEN -. "generate" .-> EK
+
+    DK -->|"stored here"| ADK
+    EK -->|"stored here"| SEK
+
+    %% Backup path
+    BACKUP -->|"encrypt + upload"| CLOUD_DESC
+
+    %% Restore path
+    B139 -->|"download"| ENC_BACKUP
+```
 
 Contents:
 
@@ -324,7 +390,49 @@ How can I be sure it keeps working?
 "dead man's switch" -like functionality in which µbackup reports successfull backups to
 alertmanager. If alertmanager doesn't hear back from µbackup in due time, an alert is raised.
 
-![Diagram on dead man's switch](docs/dead-mans-switch.png)
+```mermaid
+flowchart LR
+    subgraph SERVER["Server srv1.example.com"]
+        direction TB
+        U["ubackup"]
+        OK["✅ Backup succeeded"]
+        FAIL["❌ Network disconnected<br/>OR<br/>Server power failure"]
+
+        U --> OK
+        U --> FAIL
+    end
+
+    subgraph TIME["Timeline"]
+        direction TB
+        T0["🕒 2020-02-08 01:00"]
+        T1["🕒 +24 h<br/>2020-02-09 01:00"]
+        T2["🕒 +45 min<br/>2020-02-09 01:45"]
+
+        T0 --> T1 --> T2
+    end
+
+    subgraph AM["Alertmanager (AWS Lambda)"]
+        direction TB
+
+        subgraph DMS["Dead man's switches"]
+            S1["✅ ubackup<br/>srv1.example.com<br/>TTL = 2020-02-09 01:45"]
+            S2["✅ ubackup<br/>srv1.example.com<br/>TTL = 2020-02-09 01:45"]
+            S3["❌ ubackup<br/>srv1.example.com<br/>TTL = 2020-02-09 01:45"]
+
+            S1 -->|"no check / TTL unchanged"| S2
+            S2 -->|"TTL expires"| S3
+        end
+    end
+
+    OK -->|"I'm OK!<br/>TTL = +1 day @ 01:45"| S1
+    FAIL -. "no check-in" .-> S2
+
+    S3 --> ALERT["🚨 ALERT"]
+
+    T0 -.-> S1
+    T1 -.-> S2
+    T2 -.-> S3
+```
 
 This makes it so that even if µbackup wouldn't be able to report to you that it's not ok,
 an external component will signal you it's not ok because it didn't receive a "check-in".
