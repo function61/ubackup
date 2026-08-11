@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
@@ -13,6 +14,24 @@ import (
 	"github.com/function61/ubackup/pkg/ubtypes"
 )
 
+var (
+	dockerAPIVersion = udocker.EndpointVersion("1.45") // oldest I have rn
+)
+
+// copied here from udocker to make `State` a string
+type containerListItem struct {
+	ID              string            `json:"Id"`
+	Names           []string          `json:"Names"`
+	Image           string            `json:"Image"`
+	Labels          map[string]string `json:"Labels"`
+	State           string            `json:"State"`
+	NetworkSettings struct {
+		Networks map[string]struct {
+			IPAddress string `json:"IPAddress"`
+		} `json:"Networks"`
+	} `json:"NetworkSettings"`
+}
+
 // returns containers that have ENV var "BACKUP_COMMAND" defined
 func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint, nil, false)
@@ -24,10 +43,10 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 	// we should try to list
 	reqCtx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
-	containerMetaList := []udocker.ContainerListItem{}
+	containerMetaList := []containerListItem{}
 	_, err = ezhttp.Get(
 		reqCtx,
-		base+udocker.ListContainersEndpoint,
+		base+dockerAPIVersion.ListContainersEndpoint(),
 		ezhttp.Client(dockerClient),
 		ezhttp.RespondsJSONAllowUnknownFields(&containerMetaList))
 	if err != nil {
@@ -58,7 +77,8 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 			continue
 		}
 
-		serviceName := container.Config.Labels[udocker.SwarmServiceNameLabelKey]
+		labels := container.Config.Labels
+		serviceName := cmp.Or(labels["com.docker.compose.project"], labels[udocker.SwarmServiceNameLabelKey])
 		if serviceName == "" {
 			serviceName = "none"
 		}
@@ -121,7 +141,7 @@ func createSnapshotter(
 
 func inspectAllContainers(
 	ctx context.Context,
-	containerMetas []udocker.ContainerListItem,
+	containerMetas []containerListItem,
 	base string,
 	dockerClient *http.Client,
 ) ([]udocker.Container, error) {
@@ -132,7 +152,7 @@ func inspectAllContainers(
 		container := udocker.Container{}
 		if _, err := ezhttp.Get(
 			reqCtx,
-			base+udocker.ContainerInspectEndpoint(meta.Id),
+			base+dockerAPIVersion.ContainerInspectEndpoint(meta.ID),
 			ezhttp.Client(dockerClient),
 			ezhttp.RespondsJSONAllowUnknownFields(&container)); err != nil {
 			cancel()

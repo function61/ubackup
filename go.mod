@@ -1,10 +1,10 @@
 module github.com/function61/ubackup
 
-go 1.21
+go 1.22
 
 require (
 	github.com/aws/aws-sdk-go v1.29.0
-	github.com/function61/gokit v0.0.0-20250704123853-66cf16f69a87
+	github.com/function61/gokit v0.0.0-20260109142558-7b125766c662
 	github.com/function61/lambda-alertmanager v1.0.0
 	github.com/spf13/cobra v1.6.1
 )

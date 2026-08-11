@@ -57,6 +57,8 @@ github.com/function61/gokit v0.0.0-20200625073631-b31f1be1a654 h1:Yc9J0fEfzsN5La
 github.com/function61/gokit v0.0.0-20200625073631-b31f1be1a654/go.mod h1:qkZftFp+nvc6BitjWRb9GXS4A1tQ2BuASctzscHa9Io=
 github.com/function61/gokit v0.0.0-20250704123853-66cf16f69a87 h1:pdYdopAUpOOJD0GFZmhgSUeqIcYG/A/osGV0246P+QA=
 github.com/function61/gokit v0.0.0-20250704123853-66cf16f69a87/go.mod h1:ewGYmDoaszHKjwN9S2AM30oQwe4mhvuRUA4uvzzkmRw=
+github.com/function61/gokit v0.0.0-20260109142558-7b125766c662 h1:JVKdsdHebFHuloQp3UQ3u76vBvUBm9jUwxcLXZSMl24=
+github.com/function61/gokit v0.0.0-20260109142558-7b125766c662/go.mod h1:ewGYmDoaszHKjwN9S2AM30oQwe4mhvuRUA4uvzzkmRw=
 github.com/function61/lambda-alertmanager v0.9.2-0.20200207160106-0996e184520a h1:bWUZNaxAQHtIeRvNcx2ShpYKwgLJ9dPUMW5M8fat0C4=
 github.com/function61/lambda-alertmanager v0.9.2-0.20200207160106-0996e184520a/go.mod h1:MpcmPuM0T173DGcWe97/zHYhuwW4R6tehTAoQSz5P+s=
 github.com/function61/lambda-alertmanager v1.0.0 h1:W6C8zrJqXn/q+CTexFeqN/HIrUnUtEBINVCg8eI1/WU=
