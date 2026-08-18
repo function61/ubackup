@@ -3,15 +3,16 @@ package main
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/function61/gokit/app/udocker"
 	"github.com/function61/gokit/net/http/ezhttp"
 	"github.com/function61/gokit/os/osutil"
 	"github.com/function61/ubackup/pkg/ubtypes"
+	"github.com/google/shlex"
 )
 
 var (
@@ -83,8 +84,9 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 			serviceName = "none"
 		}
 
-		snapshotter := createSnapshotter(foundBackupCommand, container)
-		if snapshotter == nil { // warning was logged
+		snapshotter, err := createSnapshotter(foundBackupCommand, container)
+		if err != nil {
+			log.Printf("disqualifying container %s because %v", container.Name, err)
 			continue
 		}
 
@@ -104,7 +106,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 func createSnapshotter(
 	backupCommand string,
 	container udocker.Container,
-) ubtypes.Snapshotter {
+) (ubtypes.Snapshotter, error) {
 	if backupCommand == "dockervolume://" {
 		volumeMounts := []udocker.Mount{}
 		for _, mount := range container.Mounts {
@@ -114,29 +116,20 @@ func createSnapshotter(
 		}
 
 		if len(volumeMounts) != 1 {
-			log.Printf(
-				"disqualifying container %s with dockervolume:// because len(volumeMounts) != 1; got %d",
-				container.Name,
-				len(volumeMounts))
-
-			return nil
+			return nil, fmt.Errorf("dockervolume:// type container len(volumeMounts) != 1; got %d", len(volumeMounts))
 		}
 
-		return newCommandOutputSnapshotter(
-			[]string{"tar", "--create", "."},
-			volumeMounts[0].Source)
+		return newCommandOutputSnapshotter([]string{"tar", "--create", "."}, volumeMounts[0].Source), nil
 	}
 
-	// FIXME: this doesn't support spaces..
-	backupCommandParts := strings.Split(backupCommand, " ")
+	backupCommandParts, err := shlex.Split(backupCommand)
+	if err != nil {
+		return nil, errors.New("failed to split shell command") // command may be sensitive so best not to add it to error context
+	}
 
-	dockerExecCmd := append([]string{
-		"docker",
-		"exec",
-		dockerShortenContainerID(container), // for less verbose log messages
-	}, backupCommandParts...)
+	dockerExecCmd := append([]string{"docker", "exec", dockerShortenContainerID(container) /* for less verbose log messages */}, backupCommandParts...)
 
-	return newCommandOutputSnapshotter(dockerExecCmd, "")
+	return newCommandOutputSnapshotter(dockerExecCmd, ""), nil
 }
 
 func inspectAllContainers(

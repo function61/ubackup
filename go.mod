@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.29.0
 	github.com/function61/gokit v0.0.0-20260109142558-7b125766c662
 	github.com/function61/lambda-alertmanager v1.0.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/spf13/cobra v1.6.1
 )
 
