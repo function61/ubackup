@@ -19,20 +19,6 @@ var (
 	dockerAPIVersion = udocker.EndpointVersion("1.45") // oldest I have rn
 )
 
-// copied here from udocker to make `State` a string
-type containerListItem struct {
-	ID              string            `json:"Id"`
-	Names           []string          `json:"Names"`
-	Image           string            `json:"Image"`
-	Labels          map[string]string `json:"Labels"`
-	State           string            `json:"State"`
-	NetworkSettings struct {
-		Networks map[string]struct {
-			IPAddress string `json:"IPAddress"`
-		} `json:"Networks"`
-	} `json:"NetworkSettings"`
-}
-
 // returns containers that have ENV var "BACKUP_COMMAND" defined
 func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]ubtypes.BackupTarget, error) {
 	dockerClient, base, err := udocker.Client(dockerEndpoint, nil, false)
@@ -44,7 +30,7 @@ func dockerDiscoverBackupTargets(ctx context.Context, dockerEndpoint string) ([]
 	// we should try to list
 	reqCtx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
-	containerMetaList := []containerListItem{}
+	containerMetaList := []udocker.ContainerListItem{}
 	_, err = ezhttp.Get(
 		reqCtx,
 		base+dockerAPIVersion.ListContainersEndpoint(),
@@ -134,7 +120,7 @@ func createSnapshotter(
 
 func inspectAllContainers(
 	ctx context.Context,
-	containerMetas []containerListItem,
+	containerMetas []udocker.ContainerListItem,
 	base string,
 	dockerClient *http.Client,
 ) ([]udocker.Container, error) {
@@ -145,7 +131,7 @@ func inspectAllContainers(
 		container := udocker.Container{}
 		if _, err := ezhttp.Get(
 			reqCtx,
-			base+dockerAPIVersion.ContainerInspectEndpoint(meta.ID),
+			base+dockerAPIVersion.ContainerInspectEndpoint(meta.Id),
 			ezhttp.Client(dockerClient),
 			ezhttp.RespondsJSONAllowUnknownFields(&container)); err != nil {
 			cancel()
